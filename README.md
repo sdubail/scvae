@@ -4,17 +4,9 @@ scVAE is a command-line tool for modelling single-cell transcript counts using v
 
 ### For developers (on this forked version)
 
-Dependencies were pinned :
+	The code was migrated from tensorflow 1. to tensorflow 2. for compatibility issues (forever loading imports).
 
-Install the scVAE using python 3.7. For Apple Silicon users set your conda environment to osx-64: 
-
-	$ CONDA_SUBDIR=osx-64 conda create -n myenv python=3.7
-	conda activate myenv
-	conda config --env --set subdir osx-64
-
-Then : 
-
-	$ python setup.py install
+	$ pip install -e your_path_to_project/scvae
 
 ### For users of the original package:  
 Install scVAE using pip for Python 3.6 and 3.7:
