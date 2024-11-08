@@ -68,7 +68,7 @@ def acquire_data_set(title, urls, directory):
                 if os.path.isfile(url):
 
                     print("Copying {} for {} set.".format(
-                        values_or_labels, kind, title))
+                        values_or_labels, kind, ))
                     start_time = time()
 
                     copy_file(url, path)
@@ -81,7 +81,7 @@ def acquire_data_set(title, urls, directory):
                 else:
 
                     print("Downloading {} for {} set.".format(
-                        values_or_labels, kind, title))
+                        values_or_labels, kind, ))
                     start_time = time()
 
                     download_file(url, path)

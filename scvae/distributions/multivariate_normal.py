@@ -16,32 +16,37 @@
 #
 # ======================================================================== #
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow_probability import distributions as tfd
+
+tf.disable_v2_behavior()
 
 
 class MultivariateNormalDiag(tfd.MultivariateNormalDiag):
-    def __init__(self,
-                 loc=None,
-                 scale_diag=None,
-                 scale_identity_multiplier=None,
-                 validate_args=False,
-                 allow_nan_stats=True,
-                 name='MultivariateNormalDiag'):
+    def __init__(
+        self,
+        loc=None,
+        scale_diag=None,
+        scale_identity_multiplier=None,
+        validate_args=False,
+        allow_nan_stats=True,
+        name="MultivariateNormalDiag",
+    ):
         if loc is not None:
             loc = tf.expand_dims(loc, axis=-2)
         if scale_diag is not None:
             scale_diag = tf.expand_dims(scale_diag, axis=-2)
         if scale_identity_multiplier is not None:
             scale_identity_multiplier = tf.expand_dims(
-                scale_identity_multiplier, axis=-2)
+                scale_identity_multiplier, axis=-2
+            )
         super().__init__(
             loc=loc,
             scale_diag=scale_diag,
             scale_identity_multiplier=scale_identity_multiplier,
             validate_args=validate_args,
             allow_nan_stats=allow_nan_stats,
-            name=name
+            name=name,
         )
 
     def cdf(self, value):
@@ -72,10 +77,7 @@ class MultivariateNormalDiag(tfd.MultivariateNormalDiag):
         return super().quantile(tf.expand_dims(value, axis=-2))
 
     def sample(self, sample_shape=(), seed=None):
-        return tf.squeeze(super().sample(
-            sample_shape=sample_shape,
-            seed=seed
-        ), axis=-2)
+        return tf.squeeze(super().sample(sample_shape=sample_shape, seed=seed), axis=-2)
 
     def stddev(self):
         return tf.squeeze(super().stddev(), axis=-2)
@@ -88,12 +90,14 @@ class MultivariateNormalDiag(tfd.MultivariateNormalDiag):
 
 
 class MultivariateNormalTriL(tfd.MultivariateNormalTriL):
-    def __init__(self,
-                 loc=None,
-                 scale_tril=None,
-                 validate_args=False,
-                 allow_nan_stats=True,
-                 name='MultivariateNormalTriL'):
+    def __init__(
+        self,
+        loc=None,
+        scale_tril=None,
+        validate_args=False,
+        allow_nan_stats=True,
+        name="MultivariateNormalTriL",
+    ):
         if loc is not None:
             loc = tf.expand_dims(loc, axis=-2)
         if scale_tril is not None:
@@ -103,7 +107,7 @@ class MultivariateNormalTriL(tfd.MultivariateNormalTriL):
             scale_tril=scale_tril,
             validate_args=validate_args,
             allow_nan_stats=allow_nan_stats,
-            name=name
+            name=name,
         )
 
     def cdf(self, value):
@@ -134,10 +138,7 @@ class MultivariateNormalTriL(tfd.MultivariateNormalTriL):
         return super().quantile(tf.expand_dims(value, axis=-2))
 
     def sample(self, sample_shape=(), seed=None):
-        return tf.squeeze(super().sample(
-            sample_shape=sample_shape,
-            seed=seed
-        ), axis=-2)
+        return tf.squeeze(super().sample(sample_shape=sample_shape, seed=seed), axis=-2)
 
     def stddev(self):
         return tf.squeeze(super().stddev(), axis=-2)
@@ -150,12 +151,14 @@ class MultivariateNormalTriL(tfd.MultivariateNormalTriL):
 
 
 class MultivariateNormalFullCovariance(tfd.MultivariateNormalFullCovariance):
-    def __init__(self,
-                 loc=None,
-                 covariance_matrix=None,
-                 validate_args=False,
-                 allow_nan_stats=True,
-                 name='MultivariateNormalFullCovariance'):
+    def __init__(
+        self,
+        loc=None,
+        covariance_matrix=None,
+        validate_args=False,
+        allow_nan_stats=True,
+        name="MultivariateNormalFullCovariance",
+    ):
         if loc is not None:
             loc = tf.expand_dims(loc, axis=-2)
         if covariance_matrix is not None:
@@ -165,7 +168,7 @@ class MultivariateNormalFullCovariance(tfd.MultivariateNormalFullCovariance):
             covariance_matrix=covariance_matrix,
             validate_args=validate_args,
             allow_nan_stats=allow_nan_stats,
-            name=name
+            name=name,
         )
 
     def cdf(self, value):
@@ -196,10 +199,7 @@ class MultivariateNormalFullCovariance(tfd.MultivariateNormalFullCovariance):
         return super().quantile(tf.expand_dims(value, axis=-2))
 
     def sample(self, sample_shape=(), seed=None):
-        return tf.squeeze(super().sample(
-            sample_shape=sample_shape,
-            seed=seed
-        ), axis=-2)
+        return tf.squeeze(super().sample(sample_shape=sample_shape, seed=seed), axis=-2)
 
     def stddev(self):
         return tf.squeeze(super().stddev(), axis=-2)

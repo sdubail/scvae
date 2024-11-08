@@ -33,23 +33,23 @@
 
 """The Exponentially Modified Normal (Gaussian) distribution class."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import functools
 import math
 
 import numpy as np
-import tensorflow as tf
-
-from tensorflow_probability.python.distributions import distribution
-from tensorflow_probability.python.distributions import seed_stream
-from tensorflow_probability.python.internal import dtype_util
-from tensorflow_probability.python.internal import reparameterization
-from tensorflow_probability.python.internal import special_math
+import tensorflow.compat.v1 as tf
 from tensorflow.python.framework import tensor_shape
+from tensorflow_probability.python.distributions import distribution
+from tensorflow_probability.python.internal import (
+    dtype_util,
+    reparameterization,
+    special_math,
+)
+from tensorflow_probability.python.util import seed_stream
 
+tf.disable_v2_behavior()
 
 __all__ = [
     "ExponentiallyModifiedNormal",
@@ -79,13 +79,15 @@ class ExponentiallyModifiedNormal(distribution.Distribution):
     * `Z` is the normalisation constant.
     """
 
-    def __init__(self,
-                 loc,
-                 scale,
-                 rate,
-                 validate_args=False,
-                 allow_nan_stats=True,
-                 name="ExponentiallyModifiedNormal"):
+    def __init__(
+        self,
+        loc,
+        scale,
+        rate,
+        validate_args=False,
+        allow_nan_stats=True,
+        name="ExponentiallyModifiedNormal",
+    ):
         """Construct ExponentiallyModifiedNormal distributions.
 
         The parameters `loc`, `scale`, and `rate` must be shaped in a way that
@@ -118,15 +120,15 @@ class ExponentiallyModifiedNormal(distribution.Distribution):
             loc = tf.convert_to_tensor(loc, name="loc", dtype=dtype)
             scale = tf.convert_to_tensor(scale, name="scale", dtype=dtype)
             rate = tf.convert_to_tensor(rate, name="rate", dtype=dtype)
-            with tf.control_dependencies([
-                tf.assert_positive(scale),
-                tf.assert_positive(rate)
-            ] if validate_args else []):
+            with tf.control_dependencies(
+                [tf.assert_positive(scale), tf.assert_positive(rate)]
+                if validate_args
+                else []
+            ):
                 self._loc = tf.identity(loc)
                 self._scale = tf.identity(scale)
                 self._rate = tf.identity(rate)
-                tf.assert_same_float_dtype([
-                    self._loc, self._scale, self._rate])
+                tf.assert_same_float_dtype([self._loc, self._scale, self._rate])
         super(ExponentiallyModifiedNormal, self).__init__(
             dtype=dtype,
             reparameterization_type=reparameterization.FULLY_REPARAMETERIZED,
@@ -134,13 +136,17 @@ class ExponentiallyModifiedNormal(distribution.Distribution):
             allow_nan_stats=allow_nan_stats,
             parameters=parameters,
             graph_parents=[self._loc, self._scale, self._rate],
-            name=name)
+            name=name,
+        )
 
     @staticmethod
     def _param_shapes(sample_shape):
         return dict(
-            zip(("loc", "scale", "rate"), ([tf.convert_to_tensor(
-                sample_shape, dtype=tf.int32)] * 2)))
+            zip(
+                ("loc", "scale", "rate"),
+                ([tf.convert_to_tensor(sample_shape, dtype=tf.int32)] * 2),
+            )
+        )
 
     @property
     def loc(self):
@@ -159,13 +165,15 @@ class ExponentiallyModifiedNormal(distribution.Distribution):
 
     def _batch_shape_tensor(self):
         tensors = [self.loc, self.scale, self.rate]
-        return functools.reduce(tf.broadcast_dynamic_shape,
-                                [tf.shape(tensor) for tensor in tensors])
+        return functools.reduce(
+            tf.broadcast_dynamic_shape, [tf.shape(tensor) for tensor in tensors]
+        )
 
     def _batch_shape(self):
         tensors = [self.loc, self.scale, self.rate]
-        return functools.reduce(tf.broadcast_static_shape,
-                                [tensor.shape for tensor in tensors])
+        return functools.reduce(
+            tf.broadcast_static_shape, [tensor.shape for tensor in tensors]
+        )
 
     def _event_shape_tensor(self):
         return tf.constant([], dtype=tf.int32)
@@ -177,22 +185,20 @@ class ExponentiallyModifiedNormal(distribution.Distribution):
         # See
         # https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
         shape = tf.concat([[n], self.batch_shape_tensor()], 0)
-        stream = seed_stream.SeedStream(
-            seed, salt="exponentially_modified_normal")
+        stream = seed_stream.SeedStream(seed, salt="exponentially_modified_normal")
         sampled_normal = tf.random_normal(
-            shape=shape,
-            mean=0.,
-            stddev=1.,
-            dtype=self.loc.dtype,
-            seed=stream())
+            shape=shape, mean=0.0, stddev=1.0, dtype=self.loc.dtype, seed=stream()
+        )
         sampled_uniform = tf.random_uniform(
             shape=shape,
             minval=np.finfo(self.dtype.as_numpy_dtype).tiny,
-            maxval=1.,
+            maxval=1.0,
             dtype=self.dtype,
-            seed=stream())
-        return (sampled_normal * self.scale + self.loc
-                - tf.log(sampled_uniform) / self.rate)
+            seed=stream(),
+        )
+        return (
+            sampled_normal * self.scale + self.loc - tf.log(sampled_uniform) / self.rate
+        )
 
     def _log_prob(self, x):
         return self._log_unnormalized_prob(x) - self._log_normalization()
@@ -201,26 +207,26 @@ class ExponentiallyModifiedNormal(distribution.Distribution):
         u = self.rate * (x - self.loc)
         v = self.rate * self.scale
         v2 = tf.square(v)
-        return (special_math.ndtr(u / v)
-                - tf.exp(-u + 0.5 * v2
-                         + tf.log(special_math.ndtr((u - v2) / v))))
+        return special_math.ndtr(u / v) - tf.exp(
+            -u + 0.5 * v2 + tf.log(special_math.ndtr((u - v2) / v))
+        )
 
     def _log_unnormalized_prob(self, x):
         u = self.rate * (x - self.loc)
         v = self.rate * self.scale
         v2 = tf.square(v)
         erfc_value = tf.clip_by_value(
-            tf.erfc((-u + v2) / (math.sqrt(2.) * v)),
+            tf.erfc((-u + v2) / (math.sqrt(2.0) * v)),
             np.finfo(self.dtype.as_numpy_dtype).tiny,
-            np.inf)
+            np.inf,
+        )
         return -u + 0.5 * v2 + tf.log(erfc_value)
 
     def _log_normalization(self):
-        return math.log(2.) - tf.log(self.rate)
+        return math.log(2.0) - tf.log(self.rate)
 
     def _mean(self):
         return self.loc * tf.ones_like(self.scale) + 1 / self.rate
 
     def _variance(self):
-        return (tf.square(self.scale) * tf.ones_like(self.loc)
-                + tf.pow(self.rate, -2.))
+        return tf.square(self.scale) * tf.ones_like(self.loc) + tf.pow(self.rate, -2.0)

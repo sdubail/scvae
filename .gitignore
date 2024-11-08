@@ -278,3 +278,5 @@ Icon?
 # Sublime Text
 *.do*
 
+
+.vscode/

@@ -21,37 +21,45 @@ import os
 
 import scvae
 from scvae import analyses
-from scvae.analyses.prediction import (
-    PredictionSpecifications, predict_labels
-)
+from scvae.analyses.prediction import PredictionSpecifications, predict_labels
 from scvae.data import DataSet
-from scvae.data.utilities import (
-    build_directory_path, indices_for_evaluation_subset
-)
+from scvae.data.utilities import build_directory_path, indices_for_evaluation_subset
 from scvae.defaults import defaults
-from scvae.models import (
-    VariationalAutoencoder,
-    GaussianMixtureVariationalAutoencoder
-)
+from scvae.models import GaussianMixtureVariationalAutoencoder, VariationalAutoencoder
 from scvae.models.utilities import (
-    better_model_exists, model_stopped_early,
-    parse_model_versions
+    better_model_exists,
+    model_stopped_early,
+    parse_model_versions,
 )
 from scvae.utilities import (
-    title, subtitle, heading,
-    normalise_string, enumerate_strings,
-    remove_empty_directories
+    enumerate_strings,
+    heading,
+    normalise_string,
+    remove_empty_directories,
+    subtitle,
+    title,
 )
 
 
-def analyse(data_set_file_or_name, data_format=None, data_directory=None,
-            map_features=None, feature_selection=None, example_filter=None,
-            preprocessing_methods=None, split_data_set=None,
-            splitting_method=None, splitting_fraction=None,
-            included_analyses=None, analysis_level=None,
-            decomposition_methods=None, highlight_feature_indices=None,
-            export_options=None, analyses_directory=None,
-            **keyword_arguments):
+def analyse(
+    data_set_file_or_name,
+    data_format=None,
+    data_directory=None,
+    map_features=None,
+    feature_selection=None,
+    example_filter=None,
+    preprocessing_methods=None,
+    split_data_set=None,
+    splitting_method=None,
+    splitting_fraction=None,
+    included_analyses=None,
+    analysis_level=None,
+    decomposition_methods=None,
+    highlight_feature_indices=None,
+    export_options=None,
+    analyses_directory=None,
+    **keyword_arguments,
+):
     """Analyse data set."""
 
     if split_data_set is None:
@@ -78,7 +86,8 @@ def analyse(data_set_file_or_name, data_format=None, data_directory=None,
 
     if split_data_set:
         training_set, validation_set, test_set = data_set.split(
-            method=splitting_method, fraction=splitting_fraction)
+            method=splitting_method, fraction=splitting_fraction
+        )
         all_data_sets = [data_set, training_set, validation_set, test_set]
     else:
         all_data_sets = [data_set]
@@ -90,7 +99,7 @@ def analyse(data_set_file_or_name, data_format=None, data_directory=None,
         data_set=data_set,
         splitting_method=splitting_method,
         splitting_fraction=splitting_fraction,
-        preprocessing=False
+        preprocessing=False,
     )
 
     print(subtitle("Analysing data"))
@@ -102,32 +111,55 @@ def analyse(data_set_file_or_name, data_format=None, data_directory=None,
         included_analyses=included_analyses,
         analysis_level=analysis_level,
         export_options=export_options,
-        analyses_directory=analyses_directory
+        analyses_directory=analyses_directory,
     )
 
     return 0
 
 
-def train(data_set_file_or_name, data_format=None, data_directory=None,
-          map_features=None, feature_selection=None, example_filter=None,
-          noisy_preprocessing_methods=None, preprocessing_methods=None,
-          split_data_set=None, splitting_method=None, splitting_fraction=None,
-          model_type=None, latent_size=None, hidden_sizes=None,
-          number_of_importance_samples=None,
-          number_of_monte_carlo_samples=None,
-          inference_architecture=None, latent_distribution=None,
-          number_of_classes=None, parameterise_latent_posterior=False,
-          prior_probabilities_method=None,
-          generative_architecture=None, reconstruction_distribution=None,
-          number_of_reconstruction_classes=None, count_sum=None,
-          proportion_of_free_nats_for_y_kl_divergence=None,
-          minibatch_normalisation=None, batch_correction=None,
-          dropout_keep_probabilities=None,
-          number_of_warm_up_epochs=None, kl_weight=None,
-          number_of_epochs=None, minibatch_size=None, learning_rate=None,
-          run_id=None, new_run=False, reset_training=None,
-          models_directory=None, caches_directory=None,
-          analyses_directory=None, **keyword_arguments):
+def train(
+    data_set_file_or_name,
+    data_format=None,
+    data_directory=None,
+    map_features=None,
+    feature_selection=None,
+    example_filter=None,
+    noisy_preprocessing_methods=None,
+    preprocessing_methods=None,
+    split_data_set=None,
+    splitting_method=None,
+    splitting_fraction=None,
+    model_type=None,
+    latent_size=None,
+    hidden_sizes=None,
+    number_of_importance_samples=None,
+    number_of_monte_carlo_samples=None,
+    inference_architecture=None,
+    latent_distribution=None,
+    number_of_classes=None,
+    parameterise_latent_posterior=False,
+    prior_probabilities_method=None,
+    generative_architecture=None,
+    reconstruction_distribution=None,
+    number_of_reconstruction_classes=None,
+    count_sum=None,
+    proportion_of_free_nats_for_y_kl_divergence=None,
+    minibatch_normalisation=None,
+    batch_correction=None,
+    dropout_keep_probabilities=None,
+    number_of_warm_up_epochs=None,
+    kl_weight=None,
+    number_of_epochs=None,
+    minibatch_size=None,
+    learning_rate=None,
+    run_id=None,
+    new_run=False,
+    reset_training=None,
+    models_directory=None,
+    caches_directory=None,
+    analyses_directory=None,
+    **keyword_arguments,
+):
     """Train model on data set."""
 
     if split_data_set is None:
@@ -158,12 +190,13 @@ def train(data_set_file_or_name, data_format=None, data_directory=None,
         example_filter=example_filter,
         preprocessing_methods=preprocessing_methods,
         binarise_values=binarise_values,
-        noisy_preprocessing_methods=noisy_preprocessing_methods
+        noisy_preprocessing_methods=noisy_preprocessing_methods,
     )
 
     if split_data_set:
         training_set, validation_set, __ = data_set.split(
-            method=splitting_method, fraction=splitting_fraction)
+            method=splitting_method, fraction=splitting_fraction
+        )
     else:
         data_set.load()
         splitting_method = None
@@ -175,7 +208,7 @@ def train(data_set_file_or_name, data_format=None, data_directory=None,
         models_directory,
         data_set=data_set,
         splitting_method=splitting_method,
-        splitting_fraction=splitting_fraction
+        splitting_fraction=splitting_fraction,
     )
 
     if analyses_directory:
@@ -183,7 +216,7 @@ def train(data_set_file_or_name, data_format=None, data_directory=None,
             analyses_directory,
             data_set=data_set,
             splitting_method=splitting_method,
-            splitting_fraction=splitting_fraction
+            splitting_fraction=splitting_fraction,
         )
 
     model_caches_directory = None
@@ -193,7 +226,7 @@ def train(data_set_file_or_name, data_format=None, data_directory=None,
             model_caches_directory,
             data_set=data_set,
             splitting_method=splitting_method,
-            splitting_fraction=splitting_fraction
+            splitting_fraction=splitting_fraction,
         )
 
     print(title("Model"))
@@ -201,8 +234,8 @@ def train(data_set_file_or_name, data_format=None, data_directory=None,
     if number_of_classes is None:
         if training_set.has_labels:
             number_of_classes = (
-                training_set.number_of_classes
-                - training_set.number_of_excluded_classes)
+                training_set.number_of_classes - training_set.number_of_excluded_classes
+            )
 
     model = _setup_model(
         data_set=training_set,
@@ -221,13 +254,14 @@ def train(data_set_file_or_name, data_format=None, data_directory=None,
         number_of_reconstruction_classes=number_of_reconstruction_classes,
         count_sum=count_sum,
         proportion_of_free_nats_for_y_kl_divergence=(
-            proportion_of_free_nats_for_y_kl_divergence),
+            proportion_of_free_nats_for_y_kl_divergence
+        ),
         minibatch_normalisation=minibatch_normalisation,
         batch_correction=batch_correction,
         dropout_keep_probabilities=dropout_keep_probabilities,
         number_of_warm_up_epochs=number_of_warm_up_epochs,
         kl_weight=kl_weight,
-        models_directory=models_directory
+        models_directory=models_directory,
     )
 
     print(model.description)
@@ -254,7 +288,7 @@ def train(data_set_file_or_name, data_format=None, data_directory=None,
         new_run=new_run,
         reset_training=reset_training,
         analyses_directory=analyses_directory,
-        temporary_log_directory=model_caches_directory
+        temporary_log_directory=model_caches_directory,
     )
 
     # Remove temporary directories created and emptied during training
@@ -264,30 +298,54 @@ def train(data_set_file_or_name, data_format=None, data_directory=None,
     return 0
 
 
-def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
-             map_features=None, feature_selection=None, example_filter=None,
-             noisy_preprocessing_methods=None, preprocessing_methods=None,
-             split_data_set=None, splitting_method=None,
-             splitting_fraction=None,
-             model_type=None, latent_size=None, hidden_sizes=None,
-             number_of_importance_samples=None,
-             number_of_monte_carlo_samples=None,
-             inference_architecture=None, latent_distribution=None,
-             number_of_classes=None, parameterise_latent_posterior=False,
-             prior_probabilities_method=None,
-             generative_architecture=None, reconstruction_distribution=None,
-             number_of_reconstruction_classes=None, count_sum=None,
-             proportion_of_free_nats_for_y_kl_divergence=None,
-             minibatch_normalisation=None, batch_correction=None,
-             dropout_keep_probabilities=None,
-             number_of_warm_up_epochs=None, kl_weight=None,
-             minibatch_size=None, run_id=None, models_directory=None,
-             included_analyses=None, analysis_level=None,
-             decomposition_methods=None, highlight_feature_indices=None,
-             export_options=None, analyses_directory=None,
-             evaluation_set_kind=None, sample_size=None,
-             prediction_method=None, prediction_training_set_kind=None,
-             model_versions=None, **keyword_arguments):
+def evaluate(
+    data_set_file_or_name,
+    data_format=None,
+    data_directory=None,
+    map_features=None,
+    feature_selection=None,
+    example_filter=None,
+    noisy_preprocessing_methods=None,
+    preprocessing_methods=None,
+    split_data_set=None,
+    splitting_method=None,
+    splitting_fraction=None,
+    model_type=None,
+    latent_size=None,
+    hidden_sizes=None,
+    number_of_importance_samples=None,
+    number_of_monte_carlo_samples=None,
+    inference_architecture=None,
+    latent_distribution=None,
+    number_of_classes=None,
+    parameterise_latent_posterior=False,
+    prior_probabilities_method=None,
+    generative_architecture=None,
+    reconstruction_distribution=None,
+    number_of_reconstruction_classes=None,
+    count_sum=None,
+    proportion_of_free_nats_for_y_kl_divergence=None,
+    minibatch_normalisation=None,
+    batch_correction=None,
+    dropout_keep_probabilities=None,
+    number_of_warm_up_epochs=None,
+    kl_weight=None,
+    minibatch_size=None,
+    run_id=None,
+    models_directory=None,
+    included_analyses=None,
+    analysis_level=None,
+    decomposition_methods=None,
+    highlight_feature_indices=None,
+    export_options=None,
+    analyses_directory=None,
+    evaluation_set_kind=None,
+    sample_size=None,
+    prediction_method=None,
+    prediction_training_set_kind=None,
+    model_versions=None,
+    **keyword_arguments,
+):
     """Evaluate model on data set."""
 
     if split_data_set is None:
@@ -306,15 +364,15 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
         prediction_method = defaults["evaluation"]["prediction_method"]
     if prediction_training_set_kind is None:
         prediction_training_set_kind = defaults["evaluation"][
-            "prediction_training_set_kind"]
+            "prediction_training_set_kind"
+        ]
     if model_versions is None:
         model_versions = defaults["evaluation"]["model_versions"]
     if analyses_directory is None:
         analyses_directory = defaults["analyses"]["directory"]
 
     evaluation_set_kind = normalise_string(evaluation_set_kind)
-    prediction_training_set_kind = normalise_string(
-        prediction_training_set_kind)
+    prediction_training_set_kind = normalise_string(prediction_training_set_kind)
     model_versions = parse_model_versions(model_versions)
 
     print(title("Data"))
@@ -336,7 +394,7 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
         example_filter=example_filter,
         preprocessing_methods=preprocessing_methods,
         binarise_values=binarise_values,
-        noisy_preprocessing_methods=noisy_preprocessing_methods
+        noisy_preprocessing_methods=noisy_preprocessing_methods,
     )
 
     if not split_data_set or evaluation_set_kind == "full":
@@ -344,7 +402,8 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
 
     if split_data_set:
         training_set, validation_set, test_set = data_set.split(
-            method=splitting_method, fraction=splitting_fraction)
+            method=splitting_method, fraction=splitting_fraction
+        )
         data_subsets = [data_set, training_set, validation_set, test_set]
         for data_subset in data_subsets:
             clear_data_subset = True
@@ -362,20 +421,19 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
         evaluation_set = data_set
         prediction_training_set = data_set
 
-    evaluation_subset_indices = indices_for_evaluation_subset(
-        evaluation_set)
+    evaluation_subset_indices = indices_for_evaluation_subset(evaluation_set)
 
     models_directory = build_directory_path(
         models_directory,
         data_set=evaluation_set,
         splitting_method=splitting_method,
-        splitting_fraction=splitting_fraction
+        splitting_fraction=splitting_fraction,
     )
     analyses_directory = build_directory_path(
         analyses_directory,
         data_set=evaluation_set,
         splitting_method=splitting_method,
-        splitting_fraction=splitting_fraction
+        splitting_fraction=splitting_fraction,
     )
 
     print(title("Model"))
@@ -384,7 +442,8 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
         if evaluation_set.has_labels:
             number_of_classes = (
                 evaluation_set.number_of_classes
-                - evaluation_set.number_of_excluded_classes)
+                - evaluation_set.number_of_excluded_classes
+            )
 
     model = _setup_model(
         data_set=evaluation_set,
@@ -403,13 +462,14 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
         number_of_reconstruction_classes=number_of_reconstruction_classes,
         count_sum=count_sum,
         proportion_of_free_nats_for_y_kl_divergence=(
-            proportion_of_free_nats_for_y_kl_divergence),
+            proportion_of_free_nats_for_y_kl_divergence
+        ),
         minibatch_normalisation=minibatch_normalisation,
         batch_correction=batch_correction,
         dropout_keep_probabilities=dropout_keep_probabilities,
         number_of_warm_up_epochs=number_of_warm_up_epochs,
         kl_weight=kl_weight,
-        models_directory=models_directory
+        models_directory=models_directory,
     )
 
     if not model.has_been_trained(run_id=run_id):
@@ -417,15 +477,15 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
             "Model not found. Either it has not been trained or "
             "scVAE is looking in the wrong directory. "
             "The model directory resulting from the model specification is: "
-            "\"{}\"".format(model.log_directory())
+            '"{}"'.format(model.log_directory())
         )
 
-    if ("best_model" in model_versions
-            and not better_model_exists(model, run_id=run_id)):
+    if "best_model" in model_versions and not better_model_exists(model, run_id=run_id):
         model_versions.remove("best_model")
 
-    if ("early_stopping" in model_versions
-            and not model_stopped_early(model, run_id=run_id)):
+    if "early_stopping" in model_versions and not model_stopped_early(
+        model, run_id=run_id
+    ):
         model_versions.remove("early_stopping")
 
     print(subtitle("Analysis"))
@@ -436,34 +496,42 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
         included_analyses=included_analyses,
         analysis_level=analysis_level,
         export_options=export_options,
-        analyses_directory=analyses_directory
+        analyses_directory=analyses_directory,
     )
 
     print(title("Results"))
 
     print("Evaluation set: {} set.".format(evaluation_set.kind))
-    print("Model version{}: {}.".format(
-        "" if len(model_versions) == 1 else "s",
-        enumerate_strings(
-            [v.replace("_", " ") for v in model_versions], conjunction="and")))
+    print(
+        "Model version{}: {}.".format(
+            "" if len(model_versions) == 1 else "s",
+            enumerate_strings(
+                [v.replace("_", " ") for v in model_versions], conjunction="and"
+            ),
+        )
+    )
 
     if prediction_method:
         prediction_specifications = PredictionSpecifications(
             method=prediction_method,
             number_of_clusters=number_of_classes,
-            training_set_kind=prediction_training_set.kind
+            training_set_kind=prediction_training_set.kind,
         )
-        print("Prediction method: {}.".format(
-            prediction_specifications.method))
-        print("Number of clusters: {}.".format(
-            prediction_specifications.number_of_clusters))
-        print("Prediction training set: {} set.".format(
-            prediction_specifications.training_set_kind))
+        print("Prediction method: {}.".format(prediction_specifications.method))
+        print(
+            "Number of clusters: {}.".format(
+                prediction_specifications.number_of_clusters
+            )
+        )
+        print(
+            "Prediction training set: {} set.".format(
+                prediction_specifications.training_set_kind
+            )
+        )
 
     print()
 
     for model_version in model_versions:
-
         use_best_model = False
         use_early_stopping_model = False
         if model_version == "best_model":
@@ -473,13 +541,16 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
 
         print(subtitle(model_version.replace("_", " ").capitalize()))
 
-        print(heading("{} evaluation".format(
-            model_version.replace("_", "-").capitalize())))
+        print(
+            heading(
+                "{} evaluation".format(model_version.replace("_", "-").capitalize())
+            )
+        )
 
         (
             transformed_evaluation_set,
             reconstructed_evaluation_set,
-            latent_evaluation_sets
+            latent_evaluation_sets,
         ) = model.evaluate(
             evaluation_set=evaluation_set,
             evaluation_subset_indices=evaluation_subset_indices,
@@ -487,28 +558,34 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
             run_id=run_id,
             use_best_model=use_best_model,
             use_early_stopping_model=use_early_stopping_model,
-            output_versions="all"
+            output_versions="all",
         )
         print()
 
         if sample_size:
-            print(heading("{} sampling".format(
-                model_version.replace("_", "-").capitalize())))
+            print(
+                heading(
+                    "{} sampling".format(model_version.replace("_", "-").capitalize())
+                )
+            )
 
             sample_reconstruction_set, __ = model.sample(
                 sample_size=sample_size,
                 minibatch_size=minibatch_size,
                 run_id=run_id,
                 use_best_model=use_best_model,
-                use_early_stopping_model=use_early_stopping_model
+                use_early_stopping_model=use_early_stopping_model,
             )
             print()
         else:
             sample_reconstruction_set = None
 
         if prediction_method:
-            print(heading("{} prediction".format(
-                model_version.replace("_", "-").capitalize())))
+            print(
+                heading(
+                    "{} prediction".format(model_version.replace("_", "-").capitalize())
+                )
+            )
 
             latent_prediction_training_sets = model.evaluate(
                 evaluation_set=prediction_training_set,
@@ -517,20 +594,19 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
                 use_best_model=use_best_model,
                 use_early_stopping_model=use_early_stopping_model,
                 output_versions="latent",
-                log_results=False
+                log_results=False,
             )
             print()
 
-            cluster_ids, predicted_labels, predicted_superset_labels = (
-                predict_labels(
-                    training_set=latent_prediction_training_sets["z"],
-                    evaluation_set=latent_evaluation_sets["z"],
-                    specifications=prediction_specifications
-                )
+            cluster_ids, predicted_labels, predicted_superset_labels = predict_labels(
+                training_set=latent_prediction_training_sets["z"],
+                evaluation_set=latent_evaluation_sets["z"],
+                specifications=prediction_specifications,
             )
 
             evaluation_set_versions = [
-                transformed_evaluation_set, reconstructed_evaluation_set
+                transformed_evaluation_set,
+                reconstructed_evaluation_set,
             ] + list(latent_evaluation_sets.values())
 
             for evaluation_set_version in evaluation_set_versions:
@@ -538,12 +614,13 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
                     prediction_specifications=prediction_specifications,
                     predicted_cluster_ids=cluster_ids,
                     predicted_labels=predicted_labels,
-                    predicted_superset_labels=predicted_superset_labels
+                    predicted_superset_labels=predicted_superset_labels,
                 )
             print()
 
-        print(heading("{} analysis".format(
-            model_version.replace("_", "-").capitalize())))
+        print(
+            heading("{} analysis".format(model_version.replace("_", "-").capitalize()))
+        )
 
         analyses.analyse_results(
             evaluation_set=transformed_evaluation_set,
@@ -560,22 +637,28 @@ def evaluate(data_set_file_or_name, data_format=None, data_directory=None,
             included_analyses=included_analyses,
             analysis_level=analysis_level,
             export_options=export_options,
-            analyses_directory=analyses_directory
+            analyses_directory=analyses_directory,
         )
 
     return 0
 
 
-def cross_analyse(analyses_directory,
-                  include_data_sets=None, exclude_data_sets=None,
-                  include_models=None, exclude_models=None,
-                  include_prediction_methods=None,
-                  exclude_prediction_methods=None,
-                  extra_model_specification_for_plots=None,
-                  no_prediction_methods_for_gmvae_in_plots=False,
-                  epoch_cut_off=None, other_methods=None,
-                  export_options=None, log_summary=None,
-                  **keyword_arguments):
+def cross_analyse(
+    analyses_directory,
+    include_data_sets=None,
+    exclude_data_sets=None,
+    include_models=None,
+    exclude_models=None,
+    include_prediction_methods=None,
+    exclude_prediction_methods=None,
+    extra_model_specification_for_plots=None,
+    no_prediction_methods_for_gmvae_in_plots=False,
+    epoch_cut_off=None,
+    other_methods=None,
+    export_options=None,
+    log_summary=None,
+    **keyword_arguments,
+):
     """Cross-analyse models and results for split data sets."""
 
     analyses.cross_analysis.cross_analyse(
@@ -588,32 +671,41 @@ def cross_analyse(analyses_directory,
         prediction_excluded_strings=exclude_prediction_methods,
         additional_other_option=extra_model_specification_for_plots,
         no_prediction_methods_for_gmvae_in_plots=(
-            no_prediction_methods_for_gmvae_in_plots),
+            no_prediction_methods_for_gmvae_in_plots
+        ),
         epoch_cut_off=epoch_cut_off,
         other_methods=other_methods,
         export_options=export_options,
-        log_summary=log_summary
+        log_summary=log_summary,
     )
 
     return 0
 
 
-def _setup_model(data_set, model_type=None,
-                 latent_size=None, hidden_sizes=None,
-                 number_of_importance_samples=None,
-                 number_of_monte_carlo_samples=None,
-                 inference_architecture=None, latent_distribution=None,
-                 number_of_classes=None, parameterise_latent_posterior=False,
-                 prior_probabilities_method=None,
-                 generative_architecture=None,
-                 reconstruction_distribution=None,
-                 number_of_reconstruction_classes=None, count_sum=None,
-                 proportion_of_free_nats_for_y_kl_divergence=None,
-                 minibatch_normalisation=None, batch_correction=None,
-                 dropout_keep_probabilities=None,
-                 number_of_warm_up_epochs=None, kl_weight=None,
-                 models_directory=None):
-
+def _setup_model(
+    data_set,
+    model_type=None,
+    latent_size=None,
+    hidden_sizes=None,
+    number_of_importance_samples=None,
+    number_of_monte_carlo_samples=None,
+    inference_architecture=None,
+    latent_distribution=None,
+    number_of_classes=None,
+    parameterise_latent_posterior=False,
+    prior_probabilities_method=None,
+    generative_architecture=None,
+    reconstruction_distribution=None,
+    number_of_reconstruction_classes=None,
+    count_sum=None,
+    proportion_of_free_nats_for_y_kl_divergence=None,
+    minibatch_normalisation=None,
+    batch_correction=None,
+    dropout_keep_probabilities=None,
+    number_of_warm_up_epochs=None,
+    kl_weight=None,
+    models_directory=None,
+):
     if model_type is None:
         model_type = defaults["model"]["type"]
     if batch_correction is None:
@@ -646,7 +738,7 @@ def _setup_model(data_set, model_type=None,
             count_sum=count_sum,
             number_of_warm_up_epochs=number_of_warm_up_epochs,
             kl_weight=kl_weight,
-            log_directory=models_directory
+            log_directory=models_directory,
         )
 
     elif normalise_string(model_type) == "gmvae":
@@ -670,7 +762,8 @@ def _setup_model(data_set, model_type=None,
             latent_distribution=latent_distribution,
             number_of_latent_clusters=number_of_classes,
             proportion_of_free_nats_for_y_kl_divergence=(
-                proportion_of_free_nats_for_y_kl_divergence),
+                proportion_of_free_nats_for_y_kl_divergence
+            ),
             reconstruction_distribution=reconstruction_distribution,
             number_of_reconstruction_classes=number_of_reconstruction_classes,
             minibatch_normalisation=minibatch_normalisation,
@@ -680,7 +773,7 @@ def _setup_model(data_set, model_type=None,
             count_sum=count_sum,
             number_of_warm_up_epochs=number_of_warm_up_epochs,
             kl_weight=kl_weight,
-            log_directory=models_directory
+            log_directory=models_directory,
         )
 
     else:
@@ -699,11 +792,14 @@ def main():
     parser = argparse.ArgumentParser(
         prog=scvae.__name__,
         description=scvae.__description__,
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument(
-        "--version", "-V",
+        "--version",
+        "-V",
         action="version",
-        version='%(prog)s {version}'.format(version=scvae.__version__))
+        version="%(prog)s {version}".format(version=scvae.__version__),
+    )
     subparsers = parser.add_subparsers(help="commands", dest="command")
     subparsers.required = True
 
@@ -716,7 +812,8 @@ def main():
     parser_analyse = subparsers.add_parser(
         name="analyse",
         description="Analyse single-cell transcript counts.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser_analyse.set_defaults(func=analyse)
     data_set_subparsers.append(parser_analyse)
     analysis_subparsers.append(parser_analyse)
@@ -724,7 +821,8 @@ def main():
     parser_train = subparsers.add_parser(
         name="train",
         description="Train model on single-cell transcript counts.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser_train.set_defaults(func=train)
     data_set_subparsers.append(parser_train)
     model_subparsers.append(parser_train)
@@ -733,7 +831,8 @@ def main():
     parser_evaluate = subparsers.add_parser(
         name="evaluate",
         description="Evaluate model on single-cell transcript counts.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser_evaluate.set_defaults(func=evaluate)
     data_set_subparsers.append(parser_evaluate)
     model_subparsers.append(parser_evaluate)
@@ -743,71 +842,74 @@ def main():
     parser_cross_analyse = subparsers.add_parser(
         name="cross-analyse",
         description="Cross-analyse models and results on withheld data sets.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser_cross_analyse.set_defaults(func=cross_analyse)
 
     for subparser in data_set_subparsers:
         subparser.add_argument(
-            dest="data_set_file_or_name",
-            help="data set name or path to data set file"
+            dest="data_set_file_or_name", help="data set name or path to data set file"
         )
         subparser.add_argument(
-            "--format", "-f",
+            "--format",
+            "-f",
             dest="data_format",
             metavar="FORMAT",
             default=_parse_default(defaults["data"]["format"]),
-            help="format of the data set"
+            help="format of the data set",
         )
         subparser.add_argument(
-            "--data-directory", "-D",
+            "--data-directory",
+            "-D",
             metavar="DIRECTORY",
             default=_parse_default(defaults["data"]["directory"]),
-            help="directory where data are placed or copied"
+            help="directory where data are placed or copied",
         )
         subparser.add_argument(
             "--map-features",
             action="store_true",
             default=_parse_default(defaults["data"]["map_features"]),
-            help="map features using a feature mapping, if available"
+            help="map features using a feature mapping, if available",
         )
         subparser.add_argument(
-            "--feature-selection", "-F",
+            "--feature-selection",
+            "-F",
             metavar="SELECTION",
             nargs="+",
             default=_parse_default(defaults["data"]["feature_selection"]),
-            help="method for selecting features"
+            help="method for selecting features",
         )
         subparser.add_argument(
-            "--example-filter", "-E",
+            "--example-filter",
+            "-E",
             metavar="FILTER",
             nargs="+",
             default=_parse_default(defaults["data"]["example_filter"]),
             help=(
-                "method for filtering examples, optionally followed by "
-                "parameters"
-            )
+                "method for filtering examples, optionally followed by " "parameters"
+            ),
         )
         subparser.add_argument(
-            "--preprocessing-methods", "-p",
+            "--preprocessing-methods",
+            "-p",
             metavar="METHOD",
             nargs="+",
             default=_parse_default(defaults["data"]["preprocessing_methods"]),
-            help="methods for preprocessing data (applied in order)"
+            help="methods for preprocessing data (applied in order)",
         )
         subparser.add_argument(
             "--split-data-set",
             action="store_true",
             default=_parse_default(defaults["data"]["split_data_set"]),
-            help="split data set into training, validation, and test sets"
+            help="split data set into training, validation, and test sets",
         )
         subparser.add_argument(
             "--splitting-method",
             metavar="METHOD",
             default=_parse_default(defaults["data"]["splitting_method"]),
             help=(
-                "method for splitting data into training, validation, and "
-                "test sets"
-            )
+                "method for splitting data into training, validation, and " "test sets"
+            ),
         )
         subparser.add_argument(
             "--splitting-fraction",
@@ -817,30 +919,33 @@ def main():
             help=(
                 "fraction to use when splitting data into training, "
                 "validation, and test sets"
-            )
+            ),
         )
 
     for subparser in model_subparsers:
         subparser.add_argument(
-            "--model-type", "-m",
+            "--model-type",
+            "-m",
             metavar="TYPE",
             default=_parse_default(defaults["models"]["type"]),
-            help="type of model; either VAE or GMVAE"
+            help="type of model; either VAE or GMVAE",
         )
         subparser.add_argument(
-            "--latent-size", "-l",
+            "--latent-size",
+            "-l",
             metavar="SIZE",
             type=int,
             default=_parse_default(defaults["models"]["latent_size"]),
-            help="size of latent space"
+            help="size of latent space",
         )
         subparser.add_argument(
-            "--hidden-sizes", "-H",
+            "--hidden-sizes",
+            "-H",
             metavar="SIZE",
             type=int,
             nargs="+",
             default=_parse_default(defaults["models"]["hidden_sizes"]),
-            help="sizes of hidden layers"
+            help="sizes of hidden layers",
         )
         subparser.add_argument(
             "--number-of-importance-samples",
@@ -852,7 +957,7 @@ def main():
                 "the number of importance weighted samples (if two numbers "
                 "are given, the first will be used for training and the "
                 "second for evaluation)"
-            )
+            ),
         )
         subparser.add_argument(
             "--number-of-monte-carlo-samples",
@@ -864,132 +969,134 @@ def main():
                 "the number of Monte Carlo samples (if two numbers are given, "
                 "the first will be used for training and the second for "
                 "evaluation)"
-            )
+            ),
         )
         subparser.add_argument(
             "--inference-architecture",
             metavar="KIND",
-            default=_parse_default(defaults["models"][
-                "inference_architecture"]),
-            help="architecture of the inference model"
+            default=_parse_default(defaults["models"]["inference_architecture"]),
+            help="architecture of the inference model",
         )
         subparser.add_argument(
-            "--latent-distribution", "-q",
+            "--latent-distribution",
+            "-q",
             metavar="DISTRIBUTION",
             help=(
                 "distribution for the latent variable(s); defaults depends on "
-                "model type")
+                "model type"
+            ),
         )
         subparser.add_argument(
-            "--number-of-classes", "-K",
+            "--number-of-classes",
+            "-K",
             metavar="NUMBER",
             type=int,
-            help="number of proposed clusters in data set"
+            help="number of proposed clusters in data set",
         )
         subparser.add_argument(
             "--parameterise-latent-posterior",
             action="store_true",
-            default=_parse_default(defaults["models"][
-                "parameterise_latent_posterior"]),
-            help="parameterise latent posterior parameters, if possible"
+            default=_parse_default(defaults["models"]["parameterise_latent_posterior"]),
+            help="parameterise latent posterior parameters, if possible",
         )
         subparser.add_argument(
             "--generative-architecture",
             metavar="KIND",
-            default=_parse_default(defaults["models"][
-                "generative_architecture"]),
-            help="architecture of the generative model"
+            default=_parse_default(defaults["models"]["generative_architecture"]),
+            help="architecture of the generative model",
         )
         subparser.add_argument(
-            "--reconstruction-distribution", "-r",
+            "--reconstruction-distribution",
+            "-r",
             metavar="DISTRIBUTION",
-            default=_parse_default(defaults["models"][
-                "reconstruction_distribution"]),
-            help="distribution for the reconstructions"
+            default=_parse_default(defaults["models"]["reconstruction_distribution"]),
+            help="distribution for the reconstructions",
         )
         subparser.add_argument(
-            "--number-of-reconstruction-classes", "-k",
+            "--number-of-reconstruction-classes",
+            "-k",
             metavar="NUMBER",
             type=int,
-            default=_parse_default(defaults["models"][
-                "number_of_reconstruction_classes"]),
-            help="the maximum count for which to use classification"
+            default=_parse_default(
+                defaults["models"]["number_of_reconstruction_classes"]
+            ),
+            help="the maximum count for which to use classification",
         )
         subparser.add_argument(
             "--prior-probabilities-method",
             metavar="METHOD",
-            default=_parse_default(defaults["models"][
-                "prior_probabilities_method"]),
-            help="method to set prior probabilities"
+            default=_parse_default(defaults["models"]["prior_probabilities_method"]),
+            help="method to set prior probabilities",
         )
 
         subparser.add_argument(
-            "--number-of-warm-up-epochs", "-w",
+            "--number-of-warm-up-epochs",
+            "-w",
             metavar="NUMBER",
             type=int,
-            default=_parse_default(defaults["models"][
-                "number_of_warm_up_epochs"]),
+            default=_parse_default(defaults["models"]["number_of_warm_up_epochs"]),
             help=(
-                "number of initial epochs with a linear weight on the "
-                "KL divergence")
+                "number of initial epochs with a linear weight on the " "KL divergence"
+            ),
         )
         subparser.add_argument(
             "--kl-weight",
             metavar="WEIGHT",
             type=float,
             default=_parse_default(defaults["models"]["kl_weight"]),
-            help="weighting of KL divergence"
+            help="weighting of KL divergence",
         )
         subparser.add_argument(
             "--proportion-of-free-nats-for-y-kl-divergence",
             metavar="PROPORTION",
             type=float,
-            default=_parse_default(defaults["models"][
-                "proportion_of_free_nats_for_y_kl_divergence"]),
+            default=_parse_default(
+                defaults["models"]["proportion_of_free_nats_for_y_kl_divergence"]
+            ),
             help=(
                 "proportion of maximum y KL divergence, which has constant "
                 "term and zero gradients, for the GMVAE (free-bits method)"
-            )
+            ),
         )
         subparser.add_argument(
-            "--minibatch-normalisation", "-b",
+            "--minibatch-normalisation",
+            "-b",
             action="store_true",
-            default=_parse_default(defaults["models"][
-                "minibatch_normalisation"]),
-            help="use batch normalisation for minibatches in models"
+            default=_parse_default(defaults["models"]["minibatch_normalisation"]),
+            help="use batch normalisation for minibatches in models",
         )
         subparser.add_argument(
-            "--batch-correction", "--bc",
+            "--batch-correction",
+            "--bc",
             action="store_true",
-            default=_parse_default(defaults["models"][
-                "batch_correction"]),
-            help="use batch correction in models"
+            default=_parse_default(defaults["models"]["batch_correction"]),
+            help="use batch correction in models",
         )
         subparser.add_argument(
             "--dropout-keep-probabilities",
             metavar="PROBABILITY",
             type=float,
             nargs="+",
-            default=_parse_default(defaults["models"][
-                "dropout_keep_probabilities"]),
+            default=_parse_default(defaults["models"]["dropout_keep_probabilities"]),
             help=(
                 "list of probabilities, p, of keeping connections when using "
                 "dropout (interval: ]0, 1[, where p in {0, 1, False} means no "
                 "dropout)"
-            )
+            ),
         )
         subparser.add_argument(
             "--count-sum",
             action="store_true",
             default=_parse_default(defaults["models"]["count_sum"]),
-            help="use count sum"
+            help="use count sum",
         )
         subparser.add_argument(
-            "--minibatch-size", "-B",
+            "--minibatch-size",
+            "-B",
             metavar="SIZE",
             type=int,
             default=_parse_default(defaults["models"]["minibatch_size"]),
-            help="minibatch size for stochastic optimisation algorithm"
+            help="minibatch size for stochastic optimisation algorithm",
         )
         subparser.add_argument(
             "--run-id",
@@ -999,52 +1106,56 @@ def main():
             help=(
                 "ID for separate run of the model (can only contain "
                 "alphanumeric characters)"
-            )
+            ),
         )
         subparser.add_argument(
-            "--models-directory", "-M",
+            "--models-directory",
+            "-M",
             metavar="DIRECTORY",
             default=_parse_default(defaults["models"]["directory"]),
-            help="directory where models are stored"
+            help="directory where models are stored",
         )
 
     for subparser in training_subparsers:
         subparser.add_argument(
-            "--number-of-epochs", "-e",
+            "--number-of-epochs",
+            "-e",
             metavar="NUMBER",
             type=int,
             default=_parse_default(defaults["models"]["number_of_epochs"]),
-            help="number of epochs for which to train"
+            help="number of epochs for which to train",
         )
         subparser.add_argument(
             "--learning-rate",
             metavar="RATE",
             type=float,
             default=_parse_default(defaults["models"]["learning_rate"]),
-            help="learning rate when training"
+            help="learning rate when training",
         )
         subparser.add_argument(
             "--new-run",
             action="store_true",
             default=_parse_default(defaults["models"]["new_run"]),
-            help="train a model anew as a separate run with a generated run ID"
+            help="train a model anew as a separate run with a generated run ID",
         )
         subparser.add_argument(
             "--reset-training",
             action="store_true",
             default=_parse_default(defaults["models"]["reset_training"]),
-            help="reset already trained model"
+            help="reset already trained model",
         )
         subparser.add_argument(
-            "--caches-directory", "-C",
+            "--caches-directory",
+            "-C",
             metavar="DIRECTORY",
-            help="directory for temporary storage"
+            help="directory for temporary storage",
         )
         subparser.add_argument(
-            "--analyses-directory", "-A",
+            "--analyses-directory",
+            "-A",
             metavar="DIRECTORY",
             default=None,
-            help="directory where analyses are saved"
+            help="directory where analyses are saved",
         )
 
     for subparser in analysis_subparsers:
@@ -1056,46 +1167,44 @@ def main():
             help=(
                 "analyses to perform, which can be specified individually or "
                 "as groups: simple, standard, all"
-            )
+            ),
         )
         subparser.add_argument(
             "--analysis-level",
             metavar="LEVEL",
             default=_parse_default(defaults["analyses"]["analysis_level"]),
             help=(
-                "level to which analyses are performed: "
-                "limited, normal, extensive"
-            )
+                "level to which analyses are performed: " "limited, normal, extensive"
+            ),
         )
         subparser.add_argument(
             "--decomposition-methods",
             metavar="METHOD",
             nargs="+",
-            default=_parse_default(
-                defaults["analyses"]["decomposition_method"]),
-            help="methods use to decompose values"
+            default=_parse_default(defaults["analyses"]["decomposition_method"]),
+            help="methods use to decompose values",
         )
         subparser.add_argument(
             "--highlight-feature-indices",
             metavar="INDEX",
             type=int,
             nargs="+",
-            default=_parse_default(
-                defaults["analyses"]["highlight_feature_indices"]),
-            help="feature indices to highlight in analyses"
+            default=_parse_default(defaults["analyses"]["highlight_feature_indices"]),
+            help="feature indices to highlight in analyses",
         )
         subparser.add_argument(
             "--export-options",
             metavar="OPTION",
             nargs="+",
             default=_parse_default(defaults["analyses"]["export_options"]),
-            help="export options for analyses"
+            help="export options for analyses",
         )
         subparser.add_argument(
-            "--analyses-directory", "-A",
+            "--analyses-directory",
+            "-A",
             metavar="DIRECTORY",
             default=_parse_default(defaults["analyses"]["directory"]),
-            help="directory where analyses are saved"
+            help="directory where analyses are saved",
         )
 
     for subparser in evaluation_subparsers:
@@ -1106,31 +1215,32 @@ def main():
             help=(
                 "kind of subset to evaluate and analyse: "
                 "training, validation, test (default), or full"
-            )
+            ),
         )
         subparser.add_argument(
             "--sample-size",
             metavar="SIZE",
             type=int,
             default=_parse_default(defaults["models"]["sample_size"]),
-            help="sample size for sampling model"
+            help="sample size for sampling model",
         )
         subparser.add_argument(
-            "--prediction-method", "-P",
+            "--prediction-method",
+            "-P",
             metavar="METHOD",
-            default=_parse_default(
-                defaults["evaluation"]["prediction_method"]),
-            help="method for predicting labels"
+            default=_parse_default(defaults["evaluation"]["prediction_method"]),
+            help="method for predicting labels",
         )
         subparser.add_argument(
             "--prediction-training-set-kind",
             metavar="KIND",
             default=_parse_default(
-                defaults["evaluation"]["prediction_training_set_kind"]),
+                defaults["evaluation"]["prediction_training_set_kind"]
+            ),
             help=(
                 "kind of subset to evaluate and analyse: "
                 "training, validation, test (default), or full"
-            )
+            ),
         )
         subparser.add_argument(
             "--model-versions",
@@ -1140,90 +1250,95 @@ def main():
             help=(
                 "model versions to evaluate: end-of-training, best-model, "
                 "early-stopping"
-            )
+            ),
         )
 
     parser_cross_analyse.add_argument(
         "analyses_directory",
         metavar="ANALYSES_DIRECTORY",
-        help="directory where analyses were saved"
+        help="directory where analyses were saved",
     )
     parser_cross_analyse.add_argument(
-        "--include-data-sets", "-d",
+        "--include-data-sets",
+        "-d",
         metavar="TEXT",
         nargs="+",
-        help="only include data set that match TEXT"
+        help="only include data set that match TEXT",
     )
     parser_cross_analyse.add_argument(
-        "--exclude-data-sets", "-D",
+        "--exclude-data-sets",
+        "-D",
         metavar="TEXT",
         nargs="+",
-        help="exclude data sets that match TEXT"
+        help="exclude data sets that match TEXT",
     )
     parser_cross_analyse.add_argument(
-        "--include-models", "-m",
+        "--include-models",
+        "-m",
         metavar="TEXT",
         nargs="+",
-        help="only include models that match TEXT"
+        help="only include models that match TEXT",
     )
     parser_cross_analyse.add_argument(
-        "--exclude-models", "-M",
+        "--exclude-models",
+        "-M",
         metavar="TEXT",
         nargs="+",
-        help="exclude models that match TEXT"
+        help="exclude models that match TEXT",
     )
     parser_cross_analyse.add_argument(
-        "--include-prediction-methods", "-p",
+        "--include-prediction-methods",
+        "-p",
         metavar="TEXT",
         nargs="+",
-        help="only include prediction methods that match TEXT"
+        help="only include prediction methods that match TEXT",
     )
     parser_cross_analyse.add_argument(
-        "--exclude-prediction-methods", "-P",
+        "--exclude-prediction-methods",
+        "-P",
         metavar="TEXT",
         nargs="+",
-        help="exclude prediction methods that match TEXT"
+        help="exclude prediction methods that match TEXT",
     )
     parser_cross_analyse.add_argument(
-        "--extra-model-specification-for-plots", "-a",
+        "--extra-model-specification-for-plots",
+        "-a",
         metavar="SPECIFICATION",
-        help=(
-            "extra model specification required in model metrics plots"
-        )
+        help=("extra model specification required in model metrics plots"),
     )
     parser_cross_analyse.add_argument(
         "--no-prediction-methods-for-gmvae-in-plots",
         action="store_true",
         default=False,
-        help=(
-            "do not include prediction methods for GMVAE in model metrics "
-            "plots"
-        )
+        help=("do not include prediction methods for GMVAE in model metrics " "plots"),
     )
     parser_cross_analyse.add_argument(
-        "--epoch-cut-off", "-e",
+        "--epoch-cut-off",
+        "-e",
         metavar="EPOCH_NUMBER",
         type=int,
-        help="exclude models trained for longer than this number of epochs"
+        help="exclude models trained for longer than this number of epochs",
     )
     parser_cross_analyse.add_argument(
-        "--other-methods", "-o",
+        "--other-methods",
+        "-o",
         metavar="METHOD",
         nargs="+",
-        help="other methods to plot in model metrics plot, if available"
+        help="other methods to plot in model metrics plot, if available",
     )
     parser_cross_analyse.add_argument(
         "--export-options",
         metavar="OPTION",
         nargs="+",
         default=_parse_default(defaults["analyses"]["export_options"]),
-        help="export options for cross-analyses"
+        help="export options for cross-analyses",
     )
     parser_cross_analyse.add_argument(
-        "--log-summary", "-s",
+        "--log-summary",
+        "-s",
         action="store_true",
         default=_parse_default(defaults["cross_analysis"]["log_summary"]),
-        help="log summary (saved in ANALYSES_DIRECTORY)"
+        help="log summary (saved in ANALYSES_DIRECTORY)",
     )
 
     arguments = parser.parse_args()
