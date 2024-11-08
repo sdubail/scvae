@@ -8,17 +8,17 @@ here = Path(__file__).resolve().parent
 python_version_requirement = ">=3.6, <3.8"
 
 package_requirements = [
-    "importlib_resources >= 1.0",
-    "loompy >= 2.0",
-    "numpy >= 1.16",
-    "matplotlib >= 2.0",
-    "pandas >= 0.24",
-    "pillow >= 5.4",
-    "scikit-learn >= 0.20",
-    "scipy >= 1.2",
-    "seaborn >= 0.9",
-    "tables >= 3.5",
-    "tensorflow >= 1.15.2, < 2",
+    "importlib_resources == 1.0",
+    "loompy == 2.0.2",
+    "numpy == 1.17.3",
+    "matplotlib == 3.5.3",
+    "pandas == 1.3.5",
+    "pillow == 6.2",
+    "scikit-learn == 1.0.2",
+    "scipy == 1.6.1",
+    "seaborn == 0.9",
+    "tables == 3.5.1",
+    "tensorflow >= 1.15.5, < 2",
     "tensorflow-probability == 0.7"
 ]
 
