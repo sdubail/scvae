@@ -41,12 +41,22 @@ def batch_norm(
     inputs, center=True, scale=False, is_training=True, scope=None, reuse=None
 ):
     with tf.variable_scope(scope, reuse=reuse):
+        # Create layer with fixed parameters
         bn_layer = tf.keras.layers.BatchNormalization(
             center=center,
             scale=scale,
             momentum=0.999,  # matches default decay in contrib
         )
-        return bn_layer(inputs, training=is_training)
+
+        # Manually implement the batch norm logic for graph mode
+        training = tf.cast(is_training, tf.bool)  # Convert placeholder to bool tensor
+
+        # Use tf.cond to switch between training and inference behavior
+        return tf.cond(
+            training,
+            lambda: bn_layer(inputs, training=True),
+            lambda: bn_layer(inputs, training=False),
+        )
 
 
 def dropout(inputs, keep_prob=None, is_training=None):
