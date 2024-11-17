@@ -205,6 +205,23 @@ DISTRIBUTIONS = {
             total_count=tf.exp(theta["log_r"]), probs=theta["p"]
         ),
     },
+    "negative binomial small support": {
+        "parameters": {
+            "p": {
+                "support": [1e-4, 0.9999],
+                "activation function": lambda x: tf.clip_by_value(
+                    tf.sigmoid(x), 1e-4, 0.9999
+                ),
+            },
+            "log_r": {
+                "support": [-2, 8],
+                "activation function": lambda x: tf.clip_by_value(x, -2, 8),
+            },
+        },
+        "class": lambda theta: tfp.distributions.NegativeBinomial(
+            total_count=tf.exp(theta["log_r"]), probs=theta["p"]
+        ),
+    },
     "zero-inflated negative binomial": {
         "parameters": {
             "pi": {"support": [0, 1], "activation function": tf.sigmoid},

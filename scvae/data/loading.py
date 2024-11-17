@@ -23,13 +23,15 @@ import scipy.sparse
 
 from scvae.data.loaders import LOADERS
 from scvae.utilities import (
-    format_duration, normalise_string,
-    extension, download_file, copy_file
+    copy_file,
+    download_file,
+    extension,
+    format_duration,
+    normalise_string,
 )
 
 
 def acquire_data_set(title, urls, directory):
-
     paths = {}
 
     if not urls:
@@ -42,7 +44,6 @@ def acquire_data_set(title, urls, directory):
         paths[values_or_labels] = {}
 
         for kind in urls[values_or_labels]:
-
             url = urls[values_or_labels][kind]
 
             if not url:
@@ -52,50 +53,49 @@ def acquire_data_set(title, urls, directory):
             url_filename = os.path.split(url)[-1]
             file_extension = extension(url_filename)
 
-            filename = "-".join(
-                map(normalise_string, [title, values_or_labels, kind]))
+            filename = "-".join(map(normalise_string, [title, values_or_labels, kind]))
             path = os.path.join(directory, filename) + file_extension
 
             paths[values_or_labels][kind] = path
 
             if not os.path.isfile(path):
-
                 if url.startswith("."):
                     raise Exception(
-                        "Data set file have to be manually placed in "
-                        "correct folder."
+                        "Data set file have to be manually placed in " "correct folder."
                     )
                 if os.path.isfile(url):
-
-                    print("Copying {} for {} set.".format(
-                        values_or_labels, kind, ))
+                    print(
+                        "Copying {} for {} set.".format(
+                            values_or_labels,
+                            kind,
+                        )
+                    )
                     start_time = time()
 
                     copy_file(url, path)
 
                     duration = time() - start_time
-                    print("Data set copied ({}).".format(
-                        format_duration(duration)))
+                    print("Data set copied ({}).".format(format_duration(duration)))
                     print()
 
                 else:
-
-                    print("Downloading {} for {} set.".format(
-                        values_or_labels, kind, ))
+                    print(
+                        "Downloading {} for {} set. at url '{}'".format(
+                            values_or_labels, kind, url
+                        )
+                    )
                     start_time = time()
 
-                    download_file(url, path)
+                    download_file(url, path)  # to take out when bug
 
                     duration = time() - start_time
-                    print("Data set downloaded ({}).".format(
-                        format_duration(duration)))
+                    print("Data set downloaded ({}).".format(format_duration(duration)))
                     print()
 
     return paths
 
 
 def load_original_data_set(paths, data_format):
-
     print("Loading original data set.")
     loading_time_start = time()
 
@@ -107,27 +107,26 @@ def load_original_data_set(paths, data_format):
     load = LOADERS.get(data_format)
 
     if load is None:
-        raise ValueError("Data format `{}` not recognised.".format(
-            data_format))
+        raise ValueError("Data format `{}` not recognised.".format(data_format))
 
     data_dictionary = load(paths=paths)
 
     loading_duration = time() - loading_time_start
-    print("Original data set loaded ({}).".format(format_duration(
-        loading_duration)))
+    print("Original data set loaded ({}).".format(format_duration(loading_duration)))
 
     if not isinstance(data_dictionary["values"], scipy.sparse.csr_matrix):
-
         print()
 
         print("Converting data set value array to sparse matrix.")
         sparse_time_start = time()
 
-        data_dictionary["values"] = scipy.sparse.csr_matrix(
-            data_dictionary["values"])
+        data_dictionary["values"] = scipy.sparse.csr_matrix(data_dictionary["values"])
 
         sparse_duration = time() - sparse_time_start
-        print("Data set value array converted ({}).".format(format_duration(
-            sparse_duration)))
+        print(
+            "Data set value array converted ({}).".format(
+                format_duration(sparse_duration)
+            )
+        )
 
     return data_dictionary

@@ -28,20 +28,31 @@ import pandas
 import scipy
 import tables
 
+from scvae.data.generation import generate_test_dataset
 from scvae.utilities import normalise_string
 
 # List name strings are normalised, so no need to check for
 # capitalisation or spacing variants
 LIST_NAME_GUESSES = {
     "example": [
-        "barcodes", "cells", "cell_names", "cell_ids"
-        "samples", "sample_names", "sample_ids",
-        "examples", "example_names", "example_ids"
+        "barcodes",
+        "cells",
+        "cell_names",
+        "cell_ids" "samples",
+        "sample_names",
+        "sample_ids",
+        "examples",
+        "example_names",
+        "example_ids",
     ],
     "feature": [
-        "genes", "gene_names", "gene_ids",
-        "features", "feature_names", "feature_ids"
-    ]
+        "genes",
+        "gene_names",
+        "gene_ids",
+        "features",
+        "feature_names",
+        "feature_ids",
+    ],
 }
 
 LOADERS = {}
@@ -51,14 +62,15 @@ def _register_loader(name):
     def decorator(function):
         LOADERS[name] = function
         return function
+
     return decorator
 
 
 @_register_loader("macosko")
 def _load_macokso_data_set(paths):
-
     values, column_headers, row_indices = _load_tab_separated_matrix(
-        paths["values"]["full"], numpy.float32)
+        paths["values"]["full"], numpy.float32
+    )
 
     values = values.T
     example_names = numpy.array(column_headers)
@@ -76,14 +88,14 @@ def _load_macokso_data_set(paths):
             example_column=0,
             example_names=example_names,
             header=None,
-            default_label=0
+            default_label=0,
         )
 
     data_dictionary = {
         "values": values,
         "labels": labels,
         "example names": example_names,
-        "feature names": feature_names
+        "feature names": feature_names,
     }
 
     return data_dictionary
@@ -91,7 +103,6 @@ def _load_macokso_data_set(paths):
 
 @_register_loader("10x")
 def _load_10x_data_set(paths):
-
     data_dictionary = _load_values_from_10x_data_set(paths["values"]["full"])
     values = data_dictionary["values"]
     example_names = data_dictionary["example names"]
@@ -106,14 +117,14 @@ def _load_10x_data_set(paths):
             label_column="celltype",
             example_column="barcodes",
             example_names=example_names,
-            dtype="U"
+            dtype="U",
         )
 
     data_dictionary = {
         "values": values,
         "labels": labels,
         "example names": example_names,
-        "feature names": feature_names
+        "feature names": feature_names,
     }
 
     return data_dictionary
@@ -121,9 +132,7 @@ def _load_10x_data_set(paths):
 
 @_register_loader("h5")
 def _load_h5_data_set(paths):
-
-    data_dictionary = _load_sparse_matrix_in_hdf5_format(
-        paths["values"]["full"])
+    data_dictionary = _load_sparse_matrix_in_hdf5_format(paths["values"]["full"])
     values = data_dictionary["values"]
     example_names = data_dictionary["example names"]
     feature_names = data_dictionary["feature names"]
@@ -133,16 +142,14 @@ def _load_h5_data_set(paths):
     full_labels_path = labels_paths.get("full")
     if full_labels_path:
         labels = _load_labels_from_delimiter_separeted_values(
-            path=full_labels_path,
-            example_names=example_names,
-            dtype="U"
+            path=full_labels_path, example_names=example_names, dtype="U"
         )
 
     data_dictionary = {
         "values": values,
         "labels": labels,
         "example names": example_names,
-        "feature names": feature_names
+        "feature names": feature_names,
     }
 
     return data_dictionary
@@ -150,7 +157,6 @@ def _load_h5_data_set(paths):
 
 @_register_loader("10x_combine")
 def _load_and_combine_10x_data_sets(paths):
-
     # Initialisation
 
     value_sets = {}
@@ -174,8 +180,9 @@ def _load_and_combine_10x_data_sets(paths):
     for other_class_name, other_genome_name in genome_names.items():
         if not genome_name == other_genome_name:
             raise ValueError(
-                "The genome names for \"{}\" and \"{}\" do not match."
-                .format(class_name, other_class_name)
+                'The genome names for "{}" and "{}" do not match.'.format(
+                    class_name, other_class_name
+                )
             )
 
     # Infer labels
@@ -203,8 +210,9 @@ def _load_and_combine_10x_data_sets(paths):
     for other_class_name, other_feature_names in feature_name_sets.items():
         if not all(feature_names == other_feature_names):
             raise ValueError(
-                "The feature names for \"{}\" and \"{}\" do not match."
-                .format(class_name, other_class_name)
+                'The feature names for "{}" and "{}" do not match.'.format(
+                    class_name, other_class_name
+                )
             )
 
     # Return data
@@ -221,11 +229,11 @@ def _load_and_combine_10x_data_sets(paths):
 
 @_register_loader("tcga")
 def _load_tcga_data_set(paths):
-
     # Values, example names, and feature names
 
     values, column_headers, row_indices = _load_tab_separated_matrix(
-        paths["values"]["full"], numpy.float32)
+        paths["values"]["full"], numpy.float32
+    )
 
     values = values.T
     values = numpy.power(2, values) - 1
@@ -248,7 +256,7 @@ def _load_tcga_data_set(paths):
             example_column="sampleID",
             example_names=example_names,
             dtype="U",
-            default_label="No class"
+            default_label="No class",
         )
 
     # Feature mapping
@@ -257,7 +265,6 @@ def _load_tcga_data_set(paths):
     path = paths["feature mapping"]["full"]
 
     with gzip.open(path, mode="rt") as feature_mapping_file:
-
         for row in feature_mapping_file:
             if row.startswith("#"):
                 continue
@@ -275,7 +282,7 @@ def _load_tcga_data_set(paths):
         "labels": labels,
         "example names": example_names,
         "feature names": feature_ids,
-        "feature mapping": feature_mapping
+        "feature mapping": feature_mapping,
     }
 
     return data_dictionary
@@ -283,11 +290,11 @@ def _load_tcga_data_set(paths):
 
 @_register_loader("gtex")
 def _load_gtex_data_set(paths):
-
     # Values, example names and feature names
 
     values, column_headers, row_indices = _load_tab_separated_matrix(
-        paths["values"]["full"], numpy.float32)
+        paths["values"]["full"], numpy.float32
+    )
 
     values = values.T
 
@@ -310,7 +317,7 @@ def _load_gtex_data_set(paths):
             label_column="SMTSD",
             example_column="SAMPID",
             example_names=example_names,
-            dtype="U"
+            dtype="U",
         )
 
     # Feature mapping
@@ -329,7 +336,7 @@ def _load_gtex_data_set(paths):
         "labels": labels,
         "example names": example_names,
         "feature names": feature_ids,
-        "feature mapping": feature_mapping
+        "feature mapping": feature_mapping,
     }
 
     return data_dictionary
@@ -337,11 +344,9 @@ def _load_gtex_data_set(paths):
 
 @_register_loader("loom")
 def _load_loom_data_set(paths):
-
     values = labels = example_names = feature_names = batch_indices = None
 
     with loompy.connect(paths["all"]["full"]) as data_file:
-
         values = data_file[:, :].T
         n_examples, n_features = values.shape
 
@@ -363,14 +368,16 @@ def _load_loom_data_set(paths):
         elif "Cell" in data_file.ca:
             example_names = data_file.ca["Cell"].flatten()
         else:
-            example_names = numpy.array([
-                "Cell {}".format(j + 1) for j in range(n_examples)])
+            example_names = numpy.array(
+                ["Cell {}".format(j + 1) for j in range(n_examples)]
+            )
 
         if "Gene" in data_file.ra:
             feature_names = data_file.ra["Gene"].flatten().astype("U")
         else:
-            feature_names = numpy.array([
-                "Gene {}".format(j + 1) for j in range(n_features)])
+            feature_names = numpy.array(
+                ["Gene {}".format(j + 1) for j in range(n_features)]
+            )
 
         if "BatchID" in data_file.ca:
             batch_indices = data_file.ca["BatchID"].flatten()
@@ -380,7 +387,7 @@ def _load_loom_data_set(paths):
         "labels": labels,
         "example names": example_names,
         "feature names": feature_names,
-        "batch indices": batch_indices
+        "batch indices": batch_indices,
     }
 
     return data_dictionary
@@ -388,23 +395,16 @@ def _load_loom_data_set(paths):
 
 @_register_loader("matrix_fbe")
 def _load_fbe_matrix_as_data_set(paths):
-    return _load_values_and_labels_from_matrix(
-        paths=paths,
-        orientation="fbe"
-    )
+    return _load_values_and_labels_from_matrix(paths=paths, orientation="fbe")
 
 
 @_register_loader("matrix_ebf")
 def _load_ebf_matrix_as_data_set(paths):
-    return _load_values_and_labels_from_matrix(
-        paths=paths,
-        orientation="ebf"
-    )
+    return _load_values_and_labels_from_matrix(paths=paths, orientation="ebf")
 
 
 @_register_loader("mnist_original")
 def _load_original_mnist_data_set(paths):
-
     values = {}
 
     for kind in paths["values"]:
@@ -428,10 +428,7 @@ def _load_original_mnist_data_set(paths):
     m_test = values["test"].shape[0]
     m = m_training + m_test
 
-    split_indices = {
-        "training": slice(0, m_training),
-        "test": slice(m_training, m)
-    }
+    split_indices = {"training": slice(0, m_training), "test": slice(m_training, m)}
 
     values = numpy.concatenate((values["training"], values["test"]))
     labels = numpy.concatenate((labels["training"], labels["test"]))
@@ -446,7 +443,7 @@ def _load_original_mnist_data_set(paths):
         "labels": labels,
         "example names": example_names,
         "feature names": feature_names,
-        "split indices": split_indices
+        "split indices": split_indices,
     }
 
     return data_dictionary
@@ -454,12 +451,12 @@ def _load_original_mnist_data_set(paths):
 
 @_register_loader("mnist_normalised")
 def _load_normalised_mnist_data_set(paths):
-
     with gzip.open(paths["all"]["full"], mode="r") as data_file:
-        ((values_training, labels_training),
-         (values_validation, labels_validation),
-         (values_test, labels_test)) = pickle.load(
-            data_file, encoding="latin1")
+        (
+            (values_training, labels_training),
+            (values_validation, labels_validation),
+            (values_test, labels_test),
+        ) = pickle.load(data_file, encoding="latin1")
 
     m_training = values_training.shape[0]
     m_validation = values_validation.shape[0]
@@ -470,16 +467,12 @@ def _load_normalised_mnist_data_set(paths):
     split_indices = {
         "training": slice(0, m_training),
         "validation": slice(m_training, m_training_validation),
-        "test": slice(m_training_validation, m)
+        "test": slice(m_training_validation, m),
     }
 
-    values = numpy.concatenate((
-        values_training, values_validation, values_test
-    ))
+    values = numpy.concatenate((values_training, values_validation, values_test))
 
-    labels = numpy.concatenate((
-        labels_training, labels_validation, labels_test
-    ))
+    labels = numpy.concatenate((labels_training, labels_validation, labels_test))
 
     n = values.shape[1]
 
@@ -491,7 +484,7 @@ def _load_normalised_mnist_data_set(paths):
         "labels": labels,
         "example names": example_names,
         "feature names": feature_names,
-        "split indices": split_indices
+        "split indices": split_indices,
     }
 
     return data_dictionary
@@ -499,7 +492,6 @@ def _load_normalised_mnist_data_set(paths):
 
 @_register_loader("mnist_binarised")
 def _load_binarised_mnist_data_set(paths):
-
     values = {}
 
     for kind in paths["values"]:
@@ -514,12 +506,12 @@ def _load_binarised_mnist_data_set(paths):
     split_indices = {
         "training": slice(0, m_training),
         "validation": slice(m_training, m_training_validation),
-        "test": slice(m_training_validation, m)
+        "test": slice(m_training_validation, m),
     }
 
-    values = numpy.concatenate((
-        values["training"], values["validation"], values["test"]
-    ))
+    values = numpy.concatenate(
+        (values["training"], values["validation"], values["test"])
+    )
 
     n = values.shape[1]
 
@@ -531,7 +523,7 @@ def _load_binarised_mnist_data_set(paths):
         "labels": None,
         "example names": example_names,
         "feature names": feature_names,
-        "split indices": split_indices
+        "split indices": split_indices,
     }
 
     return data_dictionary
@@ -540,19 +532,24 @@ def _load_binarised_mnist_data_set(paths):
 @_register_loader("development")
 def _load_development_data_set(**kwargs):
     return _create_development_data_set(
-        n_examples=10000,
-        n_features=25,
-        scale=10,
-        update_probability=0.0001
+        n_examples=10000, n_features=25, scale=10, update_probability=0.0001
     )
 
 
-def _load_values_and_labels_from_matrix(paths, orientation=None):
+@_register_loader("synthetic_test")
+def _load_synthetic_test_data(paths):
+    data_dictionary = generate_test_dataset(
+        n_examples=1000, n_features=100, n_classes=5
+    )
+    return data_dictionary
 
+
+def _load_values_and_labels_from_matrix(paths, orientation=None):
     # Values
 
     values, column_headers, row_indices = _load_tab_separated_matrix(
-        paths["values"]["full"], numpy.float32)
+        paths["values"]["full"], numpy.float32
+    )
 
     if orientation == "fbe":
         values = values.T
@@ -562,11 +559,13 @@ def _load_values_and_labels_from_matrix(paths, orientation=None):
         example_names = row_indices
         feature_names = column_headers
     elif orientation is None:
-        raise ValueError(" ".join[
-            "Orientation of matrix not set."
-            "`fbe`: rows as features; columns as examples."
-            "`ebf`: rows as examples; columns as features."
-        ])
+        raise ValueError(
+            " ".join[
+                "Orientation of matrix not set."
+                "`fbe`: rows as features; columns as examples."
+                "`ebf`: rows as examples; columns as features."
+            ]
+        )
     else:
         raise ValueError("`{}` not a valid orientation.".format(orientation))
 
@@ -585,8 +584,7 @@ def _load_values_and_labels_from_matrix(paths, orientation=None):
 
     if "labels" in paths:
         labels = _load_labels_from_delimiter_separeted_values(
-            path=paths["labels"]["full"],
-            example_names=example_names
+            path=paths["labels"]["full"], example_names=example_names
         )
     else:
         labels = None
@@ -597,14 +595,13 @@ def _load_values_and_labels_from_matrix(paths, orientation=None):
         "values": values,
         "labels": labels,
         "example names": example_names,
-        "feature names": feature_names
+        "feature names": feature_names,
     }
 
     return data_dictionary
 
 
 def _load_values_from_10x_data_set(path):
-
     parent_paths = set()
 
     multiple_directories_error = NotImplementedError(
@@ -613,7 +610,6 @@ def _load_values_from_10x_data_set(path):
 
     if path.endswith(".h5"):
         with tables.open_file(path, mode="r") as f:
-
             table = {}
 
             for node in f.walk_nodes(where="/", classname="Array"):
@@ -625,8 +621,7 @@ def _load_values_from_10x_data_set(path):
                 table[node.name] = node.read()
 
             values = scipy.sparse.csc_matrix(
-                (table["data"], table["indices"], table["indptr"]),
-                shape=table["shape"]
+                (table["data"], table["indices"], table["indptr"]), shape=table["shape"]
             )
 
             example_names = table["barcodes"]
@@ -636,7 +631,6 @@ def _load_values_from_10x_data_set(path):
         with tarfile.open(path, mode="r:gz") as tarball:
             for member in sorted(tarball, key=lambda member: member.name):
                 if member.isfile():
-
                     parent_path, filename = os.path.split(member.name)
                     parent_paths.add(parent_path)
 
@@ -670,32 +664,31 @@ def _load_values_from_10x_data_set(path):
         "values": values,
         "example names": example_names,
         "feature names": feature_names,
-        "genome name": genome_name
+        "genome name": genome_name,
     }
 
     return data_dictionary
 
 
-def _load_sparse_matrix_in_hdf5_format(path, example_names_key=None,
-                                       feature_names_key=None):
-
+def _load_sparse_matrix_in_hdf5_format(
+    path, example_names_key=None, feature_names_key=None
+):
     parent_paths = set()
     table = {}
 
     with tables.open_file(path, mode="r") as f:
-
         for node in f.walk_nodes(where="/", classname="Array"):
             node_path = node._v_pathname
             parent_path, node_name = os.path.split(node_path)
             parent_paths.add(parent_path)
             if len(parent_paths) > 1:
                 raise NotImplementedError(
-                    "Cannot handle HDF5 data sets with multiple directories.")
+                    "Cannot handle HDF5 data sets with multiple directories."
+                )
             table[node.name] = node.read()
 
     values = scipy.sparse.csc_matrix(
-        (table["data"], table["indices"], table["indptr"]),
-        shape=table["shape"]
+        (table["data"], table["indices"], table["indptr"]), shape=table["shape"]
     )
     table.pop("data")
     table.pop("indices")
@@ -722,13 +715,18 @@ def _load_sparse_matrix_in_hdf5_format(path, example_names_key=None,
     n_rows, n_columns = values.shape
 
     n_examples_match_n_columns = (
-        example_names is not None and len(example_names) == n_columns)
-    n_features_match_n_rows = (
-        feature_names is not None and len(feature_names) == n_rows)
+        example_names is not None and len(example_names) == n_columns
+    )
+    n_features_match_n_rows = feature_names is not None and len(feature_names) == n_rows
 
-    if (n_examples_match_n_columns and n_features_match_n_rows
-            or n_examples_match_n_columns and feature_names is None
-            or n_features_match_n_rows and example_names is None):
+    if (
+        n_examples_match_n_columns
+        and n_features_match_n_rows
+        or n_examples_match_n_columns
+        and feature_names is None
+        or n_features_match_n_rows
+        and example_names is None
+    ):
         values = values.T
         n_examples = n_columns
         n_features = n_rows
@@ -738,23 +736,24 @@ def _load_sparse_matrix_in_hdf5_format(path, example_names_key=None,
 
     if example_names is None:
         example_names = numpy.array(
-            ["{} {}".format("example", i + 1) for i in range(n_examples)])
+            ["{} {}".format("example", i + 1) for i in range(n_examples)]
+        )
 
     if feature_names is None:
         feature_names = numpy.array(
-            ["{} {}".format("feature", i + 1) for i in range(n_features)])
+            ["{} {}".format("feature", i + 1) for i in range(n_features)]
+        )
 
     data_dictionary = {
         "values": values,
         "example names": example_names,
-        "feature names": feature_names
+        "feature names": feature_names,
     }
 
     return data_dictionary
 
 
 def _load_tab_separated_matrix(tsv_path, data_type=None):
-
     tsv_extension = tsv_path.split(os.extsep, 1)[-1]
 
     if tsv_extension == "tsv":
@@ -764,7 +763,8 @@ def _load_tab_separated_matrix(tsv_path, data_type=None):
     else:
         raise NotImplementedError(
             "Loading from file with extension `{}` not implemented.".format(
-                tsv_extension)
+                tsv_extension
+            )
         )
 
     values = []
@@ -772,9 +772,7 @@ def _load_tab_separated_matrix(tsv_path, data_type=None):
     column_headers = None
 
     with open_file(tsv_path, mode="rt") as tsv_file:
-
         while not column_headers:
-
             row_elements = next(tsv_file).split()
 
             # Skip, if row could not be split into elements
@@ -783,8 +781,9 @@ def _load_tab_separated_matrix(tsv_path, data_type=None):
 
             # Skip, if row only contains two integers before header
             # (assumed to be the shape of the matrix)
-            elif (len(row_elements) == 2
-                    and all([element.isdigit() for element in row_elements])):
+            elif len(row_elements) == 2 and all(
+                [element.isdigit() for element in row_elements]
+            ):
                 continue
 
             elif all(_is_float(element) for element in row_elements):
@@ -827,10 +826,15 @@ def _load_tab_separated_matrix(tsv_path, data_type=None):
 
 
 def _load_labels_from_delimiter_separeted_values(
-        path, label_column=1, example_column=0,
-        example_names=None, delimiter=None,
-        header="infer", dtype=None, default_label=None):
-
+    path,
+    label_column=1,
+    example_column=0,
+    example_names=None,
+    delimiter=None,
+    header="infer",
+    dtype=None,
+    default_label=None,
+):
     if not delimiter:
         if path.endswith(".csv"):
             delimiter = ","
@@ -864,7 +868,7 @@ def _load_labels_from_delimiter_separeted_values(
         index_col=index_column,
         usecols=use_columns,
         delimiter=delimiter,
-        header=header
+        header=header,
     )
 
     if isinstance(label_column, int):
@@ -873,7 +877,6 @@ def _load_labels_from_delimiter_separeted_values(
     unordered_labels = metadata[label_column]
 
     if example_names is not None:
-
         labels = numpy.zeros(example_names.shape, unordered_labels.dtype)
 
         for example_name, label in unordered_labels.items():
@@ -895,8 +898,8 @@ def _load_labels_from_delimiter_separeted_values(
 
 
 def _create_development_data_set(
-        n_examples=10000, n_features=25, scale=10, update_probability=0.0001):
-
+    n_examples=10000, n_features=500, scale=10, update_probability=0.0001
+):
     random_state = numpy.random.RandomState(60)
 
     values = numpy.empty((n_examples, n_features), numpy.float32)
@@ -940,8 +943,7 @@ def _create_development_data_set(
     dropout = dropout[shuffled_indices]
     labels = labels[shuffled_indices]
 
-    no_class_indices = random_state.permutation(n_examples)[
-        :int(0.1 * n_examples)]
+    no_class_indices = random_state.permutation(n_examples)[: int(0.1 * n_examples)]
     labels[no_class_indices] = 0
 
     labels = labels.astype(str)
@@ -952,18 +954,15 @@ def _create_development_data_set(
             value_dropout = random_state.binomial(1, dropout[i, j])
             values[i, j] = value_dropout * value
 
-    example_names = numpy.array(
-        ["example {}".format(i + 1) for i in range(n_examples)])
-    feature_ids = numpy.array(
-        ["feature {}".format(j + 1) for j in range(n_features)])
+    example_names = numpy.array(["example {}".format(i + 1) for i in range(n_examples)])
+    feature_ids = numpy.array(["feature {}".format(j + 1) for j in range(n_features)])
 
     feature_names = ["feature " + n for n in "ABCDE"]
     feature_id_groups = numpy.split(feature_ids, len(feature_names))
 
     feature_mapping = {
         feature_name: feature_id_group.tolist()
-        for feature_name, feature_id_group in
-        zip(feature_names, feature_id_groups)
+        for feature_name, feature_id_group in zip(feature_names, feature_id_groups)
     }
 
     data_dictionary = {
@@ -971,7 +970,7 @@ def _create_development_data_set(
         "labels": labels,
         "example names": example_names,
         "feature names": feature_ids,
-        "feature mapping": feature_mapping
+        "feature mapping": feature_mapping,
     }
 
     return data_dictionary

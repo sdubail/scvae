@@ -170,7 +170,17 @@
 		"format": "10x",
 		"example type": "counts"
 	},
-
+	"synthetic_test": {
+		"terms": {
+			"example": "cell",
+			"feature": "gene",
+			"class": "cell type",
+			"type": "count",
+			"item": "transcript"
+		},
+		"format": "synthetic_test",
+		"example type": "counts"
+	},
 	"TCGA-Kallisto": {
 		"terms": {
 			"example": "sample",

@@ -1,9 +1,11 @@
 # Folders
 # -------
-
+/explo
 /data/
 /log/
 /results/
+/analyses
+/models
 
 # Images
 # ——————
