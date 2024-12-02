@@ -2797,15 +2797,13 @@ class GaussianMixtureVariationalAutoencoder:
                     p_y_probabilities = tf.ones(self.n_clusters) / self.n_clusters
                     p_y_logits = tf.log(p_y_probabilities)
 
-                p_y_logits = tf.reshape(p_y_logits, shape=[1, self.n_clusters])
-                self.p_y = tfp.distributions.Categorical(logits=p_y_logits)
-                self.p_y_probabilities = tf.reshape(
-                    self.p_y.probs, shape=[self.n_clusters]
-                )
+                p_y_probs = tf.nn.softmax(p_y_logits, axis=-1)
+                self.p_y = tfp.distributions.Categorical(probs=p_y_probs)
+                self.p_y_probabilities = tf.reshape(p_y_probs, shape=[self.n_clusters])
 
                 p_y_samples = self.p_y.sample(sample_shape=(self.sample_size))
-                self.p_y_samples = tf.squeeze(
-                    tf.one_hot(indices=p_y_samples, depth=self.n_clusters), axis=1
+                self.p_y_samples = tf.one_hot(
+                    indices=p_y_samples, depth=self.n_clusters
                 )
 
             # q(y|x) = Cat(pi(x))
@@ -2823,8 +2821,11 @@ class GaussianMixtureVariationalAutoencoder:
             ]
 
             self.q_y_given_x = self._build_graph_for_q_y_given_x(self.x)
+            # Get logits directly from the distribution
             self.q_y_logits = self.q_y_given_x.logits
-            self.q_y_probabilities = tf.reduce_mean(self.q_y_given_x.probs, 0)
+            # Convert logits to probabilities explicitly using softmax
+            q_y_probs = tf.nn.softmax(self.q_y_logits, axis=-1)
+            self.q_y_probabilities = tf.reduce_mean(q_y_probs, 0)
 
         # z latent space
         with tf.variable_scope("Z"):
@@ -2892,7 +2893,7 @@ class GaussianMixtureVariationalAutoencoder:
                         )
                     )
 
-            self.y = self.q_y_given_x.probs
+            self.y = tf.nn.softmax(self.q_y_given_x.logits, axis=-1)
             self.z_mean = tf.add_n(
                 [
                     z_mean[k] * tf.expand_dims(self.y[:, k], -1)
