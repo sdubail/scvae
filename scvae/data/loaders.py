@@ -1026,45 +1026,36 @@ def _create_disease_data_set(
         return expression
 
     def apply_technical_effects(values):
-        # Original size factors but with more variation
-        size_factors = random_state.lognormal(
-            0, 1.2, size=values.shape[0]
-        )  # Increased from 0.7 to 1.2
+        size_factors = random_state.lognormal(0, 1.2, size=values.shape[0])
         values = values * size_factors[:, numpy.newaxis]
 
-        # Increased zero inflation (much higher dropout rate)
-        dropout_rate = random_state.beta(
-            0.3, 0.1, size=values.shape[1]
-        )  # This will give rates around 80-90%
+        # zero inflation (high dropout rate)
+        dropout_rate = random_state.beta(0.3, 0.1, size=values.shape[1])
         zero_mask = random_state.binomial(1, dropout_rate, size=values.shape).astype(
             bool
         )
         values[zero_mask] = 0
 
-        # More variable PCR bias
-        pcr_bias = numpy.exp(
-            random_state.normal(0, 0.5, size=values.shape[1])
-        )  # Increased from 0.2 to 0.5
+        # PCR bias
+        pcr_bias = numpy.exp(random_state.normal(0, 0.5, size=values.shape[1]))
         values = values * pcr_bias
 
-        # Add measurement noise (count noise)
+        # measurement noise (count noise)
         noise_factors = random_state.lognormal(0, 0.3, size=values.shape)
         values = values * noise_factors
 
-        # Add background noise (ambient RNA)
+        # background noise (ambient RNA)
         background = random_state.exponential(0.1, size=values.shape)
         values = values + background
 
         return values
 
-    # Initialize data structures
     values = numpy.zeros((n_examples, n_features), numpy.float32)
     labels = numpy.zeros(n_examples, numpy.int32)
 
-    # Create regulatory network
     regulatory_network = create_regulatory_network()
 
-    # Define disease-specific gene programs with more overlap
+    # Define disease-specific gene programs with overlap
     n_pathways = 8
     pathway_sizes = random_state.randint(15, 40, size=n_pathways)
     pathways = [
