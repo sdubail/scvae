@@ -24,18 +24,20 @@ import numpy
 import scipy
 
 from scvae.analyses import figures
+from scvae.analyses.decomposition import (
+    DECOMPOSITION_METHOD_LABEL,
+    DECOMPOSITION_METHOD_NAMES,
+    decompose,
+)
 from scvae.analyses.figures import style
 from scvae.analyses.figures.utilities import _axis_label_for_symbol
-from scvae.analyses.decomposition import (
-    decompose,
-    DECOMPOSITION_METHOD_NAMES,
-    DECOMPOSITION_METHOD_LABEL
-)
 from scvae.data.utilities import save_values
 from scvae.defaults import defaults
 from scvae.utilities import (
+    capitalise_string,
     format_duration,
-    normalise_string, proper_string, capitalise_string
+    normalise_string,
+    proper_string,
 )
 
 MAXIMUM_NUMBER_OF_EXAMPLES_FOR_HEAT_MAPS = 10000
@@ -47,10 +49,15 @@ MAXIMUM_NUMBER_OF_EXAMPLES_FOR_TSNE = 200000
 MAXIMUM_NUMBER_OF_PCA_COMPONENTS_BEFORE_TSNE = 50
 
 
-def analyse_distributions(data_set, colouring_data_set=None, cutoffs=None,
-                          preprocessed=False, analysis_level="normal",
-                          export_options=None, analyses_directory=None):
-
+def analyse_distributions(
+    data_set,
+    colouring_data_set=None,
+    cutoffs=None,
+    preprocessed=False,
+    analysis_level="normal",
+    export_options=None,
+    analyses_directory=None,
+):
     if not colouring_data_set:
         colouring_data_set = data_set
 
@@ -72,8 +79,11 @@ def analyse_distributions(data_set, colouring_data_set=None, cutoffs=None,
     print("Plotting distributions for {}.".format(data_set_title))
 
     # Class distribution
-    if (data_set.number_of_classes and data_set.number_of_classes < 100
-            and colouring_data_set == data_set):
+    if (
+        data_set.number_of_classes
+        and data_set.number_of_classes < 100
+        and colouring_data_set == data_set
+    ):
         distribution_time_start = time()
         figure, figure_name = figures.plot_class_histogram(
             labels=data_set.labels,
@@ -82,17 +92,20 @@ def analyse_distributions(data_set, colouring_data_set=None, cutoffs=None,
             normed=True,
             scale="linear",
             label_sorter=data_set.label_sorter,
-            name=data_set_name
+            name=data_set_name,
         )
         figures.save_figure(
             figure=figure,
             name=figure_name,
             options=export_options,
-            directory=distribution_directory
+            directory=distribution_directory,
         )
         distribution_duration = time() - distribution_time_start
-        print("    Class distribution plotted and saved ({}).".format(
-            format_duration(distribution_duration)))
+        print(
+            "    Class distribution plotted and saved ({}).".format(
+                format_duration(distribution_duration)
+            )
+        )
 
     # Superset class distribution
     if data_set.label_superset and colouring_data_set == data_set:
@@ -104,17 +117,20 @@ def analyse_distributions(data_set, colouring_data_set=None, cutoffs=None,
             normed=True,
             scale="linear",
             label_sorter=data_set.superset_label_sorter,
-            name=[data_set_name, "superset"]
+            name=[data_set_name, "superset"],
         )
         figures.save_figure(
             figure=figure,
             name=figure_name,
             options=export_options,
-            directory=distribution_directory
+            directory=distribution_directory,
         )
         distribution_duration = time() - distribution_time_start
-        print("    Superset class distribution plotted and saved ({}).".format(
-            format_duration(distribution_duration)))
+        print(
+            "    Superset class distribution plotted and saved ({}).".format(
+                format_duration(distribution_duration)
+            )
+        )
 
     # Count distribution
     if scipy.sparse.issparse(data_set.values):
@@ -133,21 +149,23 @@ def analyse_distributions(data_set, colouring_data_set=None, cutoffs=None,
             normed=True,
             x_scale=x_scale,
             y_scale="log",
-            name=["counts", data_set_name]
+            name=["counts", data_set_name],
         )
         figures.save_figure(
             figure=figure,
             name=figure_name,
             options=export_options,
-            directory=distribution_directory
+            directory=distribution_directory,
         )
     distribution_duration = time() - distribution_time_start
-    print("    Count distribution plotted and saved ({}).".format(
-        format_duration(distribution_duration)))
+    print(
+        "    Count distribution plotted and saved ({}).".format(
+            format_duration(distribution_duration)
+        )
+    )
 
     # Count distributions with cut-off
-    if (analysis_level == "extensive" and cutoffs
-            and data_set.example_type == "counts"):
+    if analysis_level == "extensive" and cutoffs and data_set.example_type == "counts":
         distribution_time_start = time()
         for cutoff in cutoffs:
             figure, figure_name = figures.plot_cutoff_count_histogram(
@@ -156,18 +174,19 @@ def analyse_distributions(data_set, colouring_data_set=None, cutoffs=None,
                 cutoff=cutoff,
                 normed=True,
                 scale="log",
-                name=data_set_name
+                name=data_set_name,
             )
             figures.save_figure(
                 figure=figure,
                 name=figure_name,
                 options=export_options,
-                directory=distribution_directory + "-counts"
+                directory=distribution_directory + "-counts",
             )
         distribution_duration = time() - distribution_time_start
         print(
-            "    Count distributions with cut-offs plotted and saved ({})."
-            .format(format_duration(distribution_duration))
+            "    Count distributions with cut-offs plotted and saved ({}).".format(
+                format_duration(distribution_duration)
+            )
         )
 
     # Count sum distribution
@@ -179,21 +198,23 @@ def analyse_distributions(data_set, colouring_data_set=None, cutoffs=None,
         ),
         normed=True,
         y_scale="log",
-        name=["count sum", data_set_name]
+        name=["count sum", data_set_name],
     )
     figures.save_figure(
         figure=figure,
         name=figure_name,
         options=export_options,
-        directory=distribution_directory
+        directory=distribution_directory,
     )
     distribution_duration = time() - distribution_time_start
-    print("    Count sum distribution plotted and saved ({}).".format(
-        format_duration(distribution_duration)))
+    print(
+        "    Count sum distribution plotted and saved ({}).".format(
+            format_duration(distribution_duration)
+        )
+    )
 
     # Count distributions and count sum distributions for each class
     if analysis_level == "extensive" and colouring_data_set.labels is not None:
-
         class_count_distribution_directory = distribution_directory
         if data_set.version == "original":
             class_count_distribution_directory += "-classes"
@@ -210,16 +231,14 @@ def analyse_distributions(data_set, colouring_data_set=None, cutoffs=None,
             label_sorter = colouring_data_set.label_sorter
 
         if not class_palette:
-            index_palette = style.lighter_palette(
-                colouring_data_set.number_of_classes)
+            index_palette = style.lighter_palette(colouring_data_set.number_of_classes)
             class_palette = {
-                class_name: index_palette[i] for i, class_name
-                in enumerate(sorted(class_names, key=label_sorter))
+                class_name: index_palette[i]
+                for i, class_name in enumerate(sorted(class_names, key=label_sorter))
             }
 
         distribution_time_start = time()
         for class_name in class_names:
-
             class_indices = labels == class_name
 
             if not class_indices.any():
@@ -242,24 +261,24 @@ def analyse_distributions(data_set, colouring_data_set=None, cutoffs=None,
                 normed=True,
                 y_scale="log",
                 colour=class_palette[class_name],
-                name=["counts", data_set_name, "class", class_name]
+                name=["counts", data_set_name, "class", class_name],
             )
             figures.save_figure(
                 figure=figure,
                 name=figure_name,
                 options=export_options,
-                directory=class_count_distribution_directory
+                directory=class_count_distribution_directory,
             )
 
         distribution_duration = time() - distribution_time_start
         print(
-            "    Count distributions for each class plotted and saved ({})."
-            .format(format_duration(distribution_duration))
+            "    Count distributions for each class plotted and saved ({}).".format(
+                format_duration(distribution_duration)
+            )
         )
 
         distribution_time_start = time()
         for class_name in class_names:
-
             class_indices = labels == class_name
             if not class_indices.any():
                 continue
@@ -272,28 +291,33 @@ def analyse_distributions(data_set, colouring_data_set=None, cutoffs=None,
                 normed=True,
                 y_scale="log",
                 colour=class_palette[class_name],
-                name=["count sum", data_set_name, "class", class_name]
+                name=["count sum", data_set_name, "class", class_name],
             )
             figures.save_figure(
                 figure=figure,
                 name=figure_name,
                 options=export_options,
-                directory=class_count_distribution_directory
+                directory=class_count_distribution_directory,
             )
 
         distribution_duration = time() - distribution_time_start
         print(
             "    "
-            "Count sum distributions for each class plotted and saved ({})."
-            .format(format_duration(distribution_duration))
+            "Count sum distributions for each class plotted and saved ({}).".format(
+                format_duration(distribution_duration)
+            )
         )
 
     print()
 
 
-def analyse_matrices(data_set, plot_distances=False, name=None,
-                     export_options=None, analyses_directory=None):
-
+def analyse_matrices(
+    data_set,
+    plot_distances=False,
+    name=None,
+    export_options=None,
+    analyses_directory=None,
+):
     if plot_distances:
         base_name = "distances"
     else:
@@ -316,13 +340,16 @@ def analyse_matrices(data_set, plot_distances=False, name=None,
 
     # Feature selection for plotting (if necessary)
     feature_indices_for_plotting = None
-    if (not plot_distances and data_set.number_of_features
-            > MAXIMUM_NUMBER_OF_FEATURES_FOR_HEAT_MAPS):
+    if (
+        not plot_distances
+        and data_set.number_of_features > MAXIMUM_NUMBER_OF_FEATURES_FOR_HEAT_MAPS
+    ):
         feature_variances = data_set.values.var(axis=0)
         if isinstance(feature_variances, numpy.matrix):
             feature_variances = feature_variances.A.squeeze()
         feature_indices_for_plotting = numpy.argsort(feature_variances)[
-            -MAXIMUM_NUMBER_OF_FEATURES_FOR_HEAT_MAPS:]
+            -MAXIMUM_NUMBER_OF_FEATURES_FOR_HEAT_MAPS:
+        ]
         feature_indices_for_plotting.sort()
 
     # Class palette
@@ -330,9 +357,10 @@ def analyse_matrices(data_set, plot_distances=False, name=None,
     if data_set.labels is not None and not class_palette:
         index_palette = style.lighter_palette(data_set.number_of_classes)
         class_palette = {
-            class_name: tuple(index_palette[i]) for i, class_name in
-            enumerate(sorted(data_set.class_names,
-                             key=data_set.label_sorter))
+            class_name: tuple(index_palette[i])
+            for i, class_name in enumerate(
+                sorted(data_set.class_names, key=data_set.label_sorter)
+            )
         }
 
     # Axis labels
@@ -362,8 +390,7 @@ def analyse_matrices(data_set, plot_distances=False, name=None,
 
     if feature_indices_for_plotting is not None:
         feature_label = "{} most varying {}".format(
-            len(feature_indices_for_plotting),
-            feature_label.lower()
+            len(feature_indices_for_plotting), feature_label.lower()
         )
 
     plot_string = "Plotting heat map for {} values."
@@ -377,22 +404,21 @@ def analyse_matrices(data_set, plot_distances=False, name=None,
         sorting_methods.insert(0, "labels")
 
     for sorting_method in sorting_methods:
-
         distance_metrics = [None]
 
         if plot_distances or sorting_method == "hierarchical_clustering":
             distance_metrics = ["Euclidean", "cosine"]
 
         for distance_metric in distance_metrics:
-
             start_time = time()
 
-            if (sorting_method == "hierarchical_clustering"
-                    and data_set.number_of_examples
-                    > MAXIMUM_NUMBER_OF_EXAMPLES_FOR_DENDROGRAM):
+            if (
+                sorting_method == "hierarchical_clustering"
+                and data_set.number_of_examples
+                > MAXIMUM_NUMBER_OF_EXAMPLES_FOR_DENDROGRAM
+            ):
                 sample_size = MAXIMUM_NUMBER_OF_EXAMPLES_FOR_DENDROGRAM
-            elif (data_set.number_of_examples
-                    > MAXIMUM_NUMBER_OF_EXAMPLES_FOR_HEAT_MAPS):
+            elif data_set.number_of_examples > MAXIMUM_NUMBER_OF_EXAMPLES_FOR_HEAT_MAPS:
                 sample_size = MAXIMUM_NUMBER_OF_EXAMPLES_FOR_HEAT_MAPS
             else:
                 sample_size = None
@@ -402,7 +428,8 @@ def analyse_matrices(data_set, plot_distances=False, name=None,
             if sample_size:
                 indices = shuffled_indices[:sample_size]
                 example_label = "{} randomly sampled {}".format(
-                    sample_size, data_set.terms["example"] + "s")
+                    sample_size, data_set.terms["example"] + "s"
+                )
 
             figure, figure_name = figures.plot_matrix(
                 feature_matrix=data_set.values[indices],
@@ -413,70 +440,77 @@ def analyse_matrices(data_set, plot_distances=False, name=None,
                 sorting_method=sorting_method,
                 distance_metric=distance_metric,
                 labels=(
-                    data_set.labels[indices]
-                    if data_set.labels is not None else None
+                    data_set.labels[indices] if data_set.labels is not None else None
                 ),
                 label_kind=data_set.terms["class"],
                 class_palette=class_palette,
                 feature_indices_for_plotting=feature_indices_for_plotting,
-                name_parts=name + [
-                    data_set.version,
-                    distance_metric,
-                    sorting_method
-                ]
+                name_parts=name + [data_set.version, distance_metric, sorting_method],
             )
             figures.save_figure(
                 figure=figure,
                 name=figure_name,
                 options=export_options,
-                directory=analyses_directory
+                directory=analyses_directory,
             )
 
             duration = time() - start_time
 
-            plot_kind_string = "Heat map for {} values".format(
-                data_set.version)
+            plot_kind_string = "Heat map for {} values".format(data_set.version)
 
             if plot_distances:
                 plot_kind_string = "{} distances in {} space".format(
-                    distance_metric.capitalize(),
-                    data_set.version
+                    distance_metric.capitalize(), data_set.version
                 )
 
             subsampling_string = ""
 
             if sample_size:
                 subsampling_string = "{} {} randomly sampled examples".format(
-                    "for" if plot_distances else "of", sample_size)
+                    "for" if plot_distances else "of", sample_size
+                )
 
-            sort_string = "sorted using {}".format(
-                sorting_method.replace("_", " ")
-            )
+            sort_string = "sorted using {}".format(sorting_method.replace("_", " "))
 
-            if (not plot_distances
-                    and sorting_method == "hierarchical_clustering"):
+            if not plot_distances and sorting_method == "hierarchical_clustering":
                 sort_string += " (with {} distances)".format(distance_metric)
 
-            print("    " + " ".join([s for s in [
-                plot_kind_string,
-                subsampling_string,
-                sort_string,
-                "plotted and saved",
-                "({})".format(format_duration(duration))
-            ] if s]) + ".")
+            print(
+                "    "
+                + " ".join(
+                    [
+                        s
+                        for s in [
+                            plot_kind_string,
+                            subsampling_string,
+                            sort_string,
+                            "plotted and saved",
+                            "({})".format(format_duration(duration)),
+                        ]
+                        if s
+                    ]
+                )
+                + "."
+            )
 
     print()
 
 
-def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
-                           colouring_data_set=None,
-                           sampled_data_set=None,
-                           decomposition_methods=None,
-                           highlight_feature_indices=None,
-                           symbol=None, title="data set", specifier=None,
-                           analysis_level=None, export_options=None,
-                           analyses_directory=None):
-
+def analyse_decompositions(
+    data_sets,
+    other_data_sets=None,
+    centroids=None,
+    colouring_data_set=None,
+    sampled_data_set=None,
+    decomposition_methods=None,
+    highlight_feature_indices=None,
+    symbol=None,
+    title="data set",
+    specifier=None,
+    analysis_level=None,
+    export_options=None,
+    analyses_directory=None,
+):
     if analysis_level is None:
         analysis_level = defaults["analyses"]["analysis_level"]
 
@@ -514,8 +548,7 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
     decomposition_methods.insert(0, None)
 
     if highlight_feature_indices is None:
-        highlight_feature_indices = defaults["analyses"][
-            "highlight_feature_indices"]
+        highlight_feature_indices = defaults["analyses"]["highlight_feature_indices"]
     elif not isinstance(highlight_feature_indices, (list, tuple)):
         highlight_feature_indices = [highlight_feature_indices]
     else:
@@ -525,7 +558,6 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
         analyses_directory = defaults["analyses"]["directory"]
 
     for data_set, other_data_set in zip(data_sets, other_data_sets):
-
         if data_set.values.shape[1] <= 1:
             continue
 
@@ -550,14 +582,12 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
             centroids = None
 
         if other_data_set:
-            title = "{} set values in {}".format(
-                other_data_set.version, title)
+            title = "{} set values in {}".format(other_data_set.version, title)
             name = other_data_set.version + "-" + name
 
         decompositions_directory = os.path.join(analyses_directory, name)
 
         for decomposition_method in decomposition_methods:
-
             other_values = None
             sampled_values = None
 
@@ -577,7 +607,8 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                     continue
             else:
                 decomposition_method = proper_string(
-                    decomposition_method, DECOMPOSITION_METHOD_NAMES)
+                    decomposition_method, DECOMPOSITION_METHOD_NAMES
+                )
 
                 values_decomposed = data_set.values
                 other_values_decomposed = other_values
@@ -592,56 +623,55 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                 if not other_value_sets_decomposed:
                     other_value_sets_decomposed = None
 
-                if decomposition_method == "t-SNE":
-                    if (data_set.number_of_examples
-                            > MAXIMUM_NUMBER_OF_EXAMPLES_FOR_TSNE):
+                if decomposition_method in ["t-SNE", "UMAP"]:
+                    if (
+                        data_set.number_of_examples
+                        > MAXIMUM_NUMBER_OF_EXAMPLES_FOR_TSNE
+                    ):
                         print(
-                            "The number of examples for {}".format(
-                                title),
+                            "The number of examples for {}".format(title),
                             "is too large to decompose it",
-                            "using {}. Skipping.".format(decomposition_method)
+                            "using {}. Skipping.".format(decomposition_method),
                         )
                         print()
                         continue
-
-                    elif (data_set.number_of_features >
-                            MAXIMUM_NUMBER_OF_FEATURES_FOR_TSNE):
+                    elif (
+                        data_set.number_of_features
+                        > MAXIMUM_NUMBER_OF_FEATURES_FOR_TSNE
+                    ):
                         number_of_pca_components_before_tsne = min(
                             MAXIMUM_NUMBER_OF_PCA_COMPONENTS_BEFORE_TSNE,
-                            data_set.number_of_examples - 1
+                            data_set.number_of_examples - 1,
                         )
                         print(
-                            "The number of features for {}".format(
-                                title),
+                            "The number of features for {}".format(title),
                             "is too large to decompose it",
-                            "using {} in due time.".format(
-                                decomposition_method)
+                            "using {} in due time.".format(decomposition_method),
                         )
                         print(
-                            "Decomposing {} to {} components using PCA "
-                            "beforehand.".format(
-                                title,
-                                number_of_pca_components_before_tsne
+                            "Decomposing {} to {} components using PCA beforehand.".format(
+                                title, number_of_pca_components_before_tsne
                             )
                         )
                         decompose_time_start = time()
                         (
                             values_decomposed,
                             other_value_sets_decomposed,
-                            centroids_decomposed
+                            centroids_decomposed,
                         ) = decompose(
                             values_decomposed,
                             other_value_sets=other_value_sets_decomposed,
                             centroids=centroids_decomposed,
                             method="pca",
-                            number_of_components=(
-                                number_of_pca_components_before_tsne)
+                            number_of_components=number_of_pca_components_before_tsne,
                         )
                         decompose_duration = time() - decompose_time_start
-                        print("{} pre-decomposed ({}).".format(
-                            capitalise_string(title),
-                            format_duration(decompose_duration)
-                        ))
+                        print(
+                            "{} pre-decomposed ({}).".format(
+                                capitalise_string(title),
+                                format_duration(decompose_duration),
+                            )
+                        )
 
                     else:
                         if scipy.sparse.issparse(values_decomposed):
@@ -649,35 +679,34 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                         if scipy.sparse.issparse(other_values_decomposed):
                             other_values_decomposed = other_values_decomposed.A
                         if scipy.sparse.issparse(sampled_values_decomposed):
-                            sampled_values_decomposed = (
-                                sampled_values_decomposed.A)
+                            sampled_values_decomposed = sampled_values_decomposed.A
 
-                print("Decomposing {} using {}.".format(
-                    title, decomposition_method))
+                print("Decomposing {} using {}.".format(title, decomposition_method))
                 decompose_time_start = time()
                 (
                     values_decomposed,
                     other_value_sets_decomposed,
-                    centroids_decomposed
+                    centroids_decomposed,
                 ) = decompose(
                     values_decomposed,
                     other_value_sets=other_value_sets_decomposed,
                     centroids=centroids_decomposed,
                     method=decomposition_method,
-                    number_of_components=2
+                    number_of_components=2,
                 )
                 decompose_duration = time() - decompose_time_start
-                print("{} decomposed ({}).".format(
-                    capitalise_string(title),
-                    format_duration(decompose_duration)
-                ))
+                print(
+                    "{} decomposed ({}).".format(
+                        capitalise_string(title), format_duration(decompose_duration)
+                    )
+                )
                 print()
 
                 if other_value_sets_decomposed:
-                    other_values_decomposed = other_value_sets_decomposed.get(
-                        "other")
-                    sampled_values_decomposed = (
-                        other_value_sets_decomposed.get("sampled"))
+                    other_values_decomposed = other_value_sets_decomposed.get("other")
+                    sampled_values_decomposed = other_value_sets_decomposed.get(
+                        "sampled"
+                    )
 
             if base_symbol:
                 symbol = base_symbol
@@ -698,7 +727,7 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
             figure_labels = {
                 "title": decomposition_method,
                 "x label": x_label,
-                "y label": y_label
+                "y label": y_label,
             }
 
             if other_data_set:
@@ -713,17 +742,14 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                 return
 
             if decomposition_method:
-
-                table_name_parts = [
-                    name, normalise_string(decomposition_method)]
+                table_name_parts = [name, normalise_string(decomposition_method)]
                 if sampled_values_decomposed is not None:
                     table_name_parts.append("samples")
                 table_name = "-".join(table_name_parts)
 
                 feature_names = [
                     "{}{}".format(
-                        DECOMPOSITION_METHOD_LABEL[decomposition_method],
-                        coordinate
+                        DECOMPOSITION_METHOD_LABEL[decomposition_method], coordinate
                     )
                     for coordinate in [1, 2]
                 ]
@@ -736,18 +762,22 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                     name=table_name,
                     row_names=example_names,
                     column_names=feature_names,
-                    directory=decompositions_directory)
+                    directory=decompositions_directory,
+                )
 
                 saving_duration = time() - saving_time_start
-                print("Decomposed {} saved ({}).".format(
-                    title,
-                    format_duration(saving_duration)))
+                print(
+                    "Decomposed {} saved ({}).".format(
+                        title, format_duration(saving_duration)
+                    )
+                )
                 print()
 
-            print("Plotting {}{}.".format(
-                "decomposed " if decomposition_method else "",
-                title
-            ))
+            print(
+                "Plotting {}{}.".format(
+                    "decomposed " if decomposition_method else "", title
+                )
+            )
 
             # No colour-coding
             plot_time_start = time()
@@ -756,19 +786,20 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                 centroids=centroids_decomposed,
                 figure_labels=figure_labels,
                 example_tag=data_set.terms["example"],
-                name=name
+                name=name,
             )
             figures.save_figure(
                 figure=figure,
                 name=figure_name,
                 options=export_options,
-                directory=decompositions_directory
+                directory=decompositions_directory,
             )
             plot_duration = time() - plot_time_start
-            print("    {} plotted and saved ({}).".format(
-                capitalise_string(title),
-                format_duration(plot_duration)
-            ))
+            print(
+                "    {} plotted and saved ({}).".format(
+                    capitalise_string(title), format_duration(plot_duration)
+                )
+            )
 
             # Samples
             if sampled_data_set:
@@ -779,19 +810,20 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                     sampled_values=sampled_values_decomposed,
                     figure_labels=figure_labels,
                     example_tag=data_set.terms["example"],
-                    name=name
+                    name=name,
                 )
                 figures.save_figure(
                     figure=figure,
                     name=figure_name,
                     options=export_options,
-                    directory=decompositions_directory
+                    directory=decompositions_directory,
                 )
                 plot_duration = time() - plot_time_start
-                print("    {} (with samples) plotted and saved ({}).".format(
-                    capitalise_string(title),
-                    format_duration(plot_duration)
-                ))
+                print(
+                    "    {} (with samples) plotted and saved ({}).".format(
+                        capitalise_string(title), format_duration(plot_duration)
+                    )
+                )
 
             # Labels
             if colouring_data_set.labels is not None:
@@ -803,17 +835,20 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                     centroids=centroids_decomposed,
                     figure_labels=figure_labels,
                     example_tag=data_set.terms["example"],
-                    name=name
+                    name=name,
                 )
                 figures.save_figure(
                     figure=figure,
                     name=figure_name,
                     options=export_options,
-                    directory=decompositions_directory
+                    directory=decompositions_directory,
                 )
                 plot_duration = time() - plot_time_start
-                print("    {} (with labels) plotted and saved ({}).".format(
-                    capitalise_string(title), format_duration(plot_duration)))
+                print(
+                    "    {} (with labels) plotted and saved ({}).".format(
+                        capitalise_string(title), format_duration(plot_duration)
+                    )
+                )
 
                 # Superset labels
                 if colouring_data_set.superset_labels is not None:
@@ -825,21 +860,19 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                         centroids=centroids_decomposed,
                         figure_labels=figure_labels,
                         example_tag=data_set.terms["example"],
-                        name=name
+                        name=name,
                     )
                     figures.save_figure(
                         figure=figure,
                         name=figure_name,
                         options=export_options,
-                        directory=decompositions_directory
+                        directory=decompositions_directory,
                     )
                     plot_duration = time() - plot_time_start
                     print(
                         "    "
-                        "{} (with superset labels) plotted and saved ({})."
-                        .format(
-                            capitalise_string(title),
-                            format_duration(plot_duration)
+                        "{} (with superset labels) plotted and saved ({}).".format(
+                            capitalise_string(title), format_duration(plot_duration)
                         )
                     )
 
@@ -856,28 +889,29 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                                 class_name=class_name,
                                 figure_labels=figure_labels,
                                 example_tag=data_set.terms["example"],
-                                name=name
+                                name=name,
                             )
                             figures.save_figure(
                                 figure=figure,
                                 name=figure_name,
                                 options=export_options,
-                                directory=decompositions_directory
+                                directory=decompositions_directory,
                             )
                         plot_duration = time() - plot_time_start
                         print(
-                            "    {} (for each class) plotted and saved ({})."
-                            .format(
-                                capitalise_string(title),
-                                format_duration(plot_duration)
+                            "    {} (for each class) plotted and saved ({}).".format(
+                                capitalise_string(title), format_duration(plot_duration)
                             )
                         )
 
-                    if (colouring_data_set.superset_labels is not None
-                            and data_set.number_of_superset_classes <= 10):
+                    if (
+                        colouring_data_set.superset_labels is not None
+                        and data_set.number_of_superset_classes <= 10
+                    ):
                         plot_time_start = time()
-                        for superset_class_name in (
-                                colouring_data_set.superset_class_names):
+                        for (
+                            superset_class_name
+                        ) in colouring_data_set.superset_class_names:
                             figure, figure_name = figures.plot_values(
                                 plot_values_decomposed,
                                 colour_coding="superset class",
@@ -886,20 +920,19 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                                 class_name=superset_class_name,
                                 figure_labels=figure_labels,
                                 example_tag=data_set.terms["example"],
-                                name=name
+                                name=name,
                             )
                             figures.save_figure(
                                 figure=figure,
                                 name=figure_name,
                                 options=export_options,
-                                directory=decompositions_directory
+                                directory=decompositions_directory,
                             )
                         plot_duration = time() - plot_time_start
                         print(
                             "    {} (for each superset class) plotted and "
                             "saved ({}).".format(
-                                capitalise_string(title),
-                                format_duration(plot_duration)
+                                capitalise_string(title), format_duration(plot_duration)
                             )
                         )
 
@@ -919,15 +952,12 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                     figure=figure,
                     name=figure_name,
                     options=export_options,
-                    directory=decompositions_directory
+                    directory=decompositions_directory,
                 )
                 plot_duration = time() - plot_time_start
                 print(
-                    "    "
-                    "{} (with batches) plotted and saved ({})."
-                    .format(
-                        capitalise_string(title),
-                        format_duration(plot_duration)
+                    "    " "{} (with batches) plotted and saved ({}).".format(
+                        capitalise_string(title), format_duration(plot_duration)
                     )
                 )
 
@@ -947,15 +977,13 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                     figure=figure,
                     name=figure_name,
                     options=export_options,
-                    directory=decompositions_directory
+                    directory=decompositions_directory,
                 )
                 plot_duration = time() - plot_time_start
                 print(
                     "    "
-                    "{} (with predicted cluster IDs) plotted and saved ({})."
-                    .format(
-                        capitalise_string(title),
-                        format_duration(plot_duration)
+                    "{} (with predicted cluster IDs) plotted and saved ({}).".format(
+                        capitalise_string(title), format_duration(plot_duration)
                     )
                 )
 
@@ -975,15 +1003,12 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                     figure=figure,
                     name=figure_name,
                     options=export_options,
-                    directory=decompositions_directory
+                    directory=decompositions_directory,
                 )
                 plot_duration = time() - plot_time_start
                 print(
-                    "    "
-                    "{} (with predicted labels) plotted and saved ({})."
-                    .format(
-                        capitalise_string(title),
-                        format_duration(plot_duration)
+                    "    " "{} (with predicted labels) plotted and saved ({}).".format(
+                        capitalise_string(title), format_duration(plot_duration)
                     )
                 )
 
@@ -1002,14 +1027,13 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                     figure=figure,
                     name=figure_name,
                     options=export_options,
-                    directory=decompositions_directory
+                    directory=decompositions_directory,
                 )
                 plot_duration = time() - plot_time_start
                 print(
                     "    {} (with predicted superset labels) plotted and saved"
                     " ({}).".format(
-                        capitalise_string(title),
-                        format_duration(plot_duration)
+                        capitalise_string(title), format_duration(plot_duration)
                     )
                 )
 
@@ -1022,19 +1046,20 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                 centroids=centroids_decomposed,
                 figure_labels=figure_labels,
                 example_tag=data_set.terms["example"],
-                name=name
+                name=name,
             )
             figures.save_figure(
                 figure=figure,
                 name=figure_name,
                 options=export_options,
-                directory=decompositions_directory
+                directory=decompositions_directory,
             )
             plot_duration = time() - plot_time_start
-            print("    {} (with count sum) plotted and saved ({}).".format(
-                capitalise_string(title),
-                format_duration(plot_duration)
-            ))
+            print(
+                "    {} (with count sum) plotted and saved ({}).".format(
+                    capitalise_string(title), format_duration(plot_duration)
+                )
+            )
 
             # Features
             for feature_index in highlight_feature_indices:
@@ -1047,29 +1072,33 @@ def analyse_decompositions(data_sets, other_data_sets=None, centroids=None,
                     feature_index=feature_index,
                     figure_labels=figure_labels,
                     example_tag=data_set.terms["example"],
-                    name=name
+                    name=name,
                 )
                 figures.save_figure(
                     figure=figure,
                     name=figure_name,
                     options=export_options,
-                    directory=decompositions_directory
+                    directory=decompositions_directory,
                 )
                 plot_duration = time() - plot_time_start
-                print("    {} (with {}) plotted and saved ({}).".format(
-                    capitalise_string(title),
-                    data_set.feature_names[feature_index],
-                    format_duration(plot_duration)
-                ))
+                print(
+                    "    {} (with {}) plotted and saved ({}).".format(
+                        capitalise_string(title),
+                        data_set.feature_names[feature_index],
+                        format_duration(plot_duration),
+                    )
+                )
 
             print()
 
 
-def analyse_centroid_probabilities(centroids, name=None,
-                                   analysis_level=None,
-                                   export_options=None,
-                                   analyses_directory=None):
-
+def analyse_centroid_probabilities(
+    centroids,
+    name=None,
+    analysis_level=None,
+    export_options=None,
+    analyses_directory=None,
+):
     if name:
         name = normalise_string(name)
     if analysis_level is None:
@@ -1095,27 +1124,24 @@ def analyse_centroid_probabilities(centroids, name=None,
     if prior_probabilities is not None:
         if posterior_probabilities is not None:
             y_label = _axis_label_for_symbol(
-                symbol="\\pi",
-                distribution=normalise_string("posterior"),
-                suffix="^k")
+                symbol="\\pi", distribution=normalise_string("posterior"), suffix="^k"
+            )
             if name:
                 plot_name = [name, "posterior", "prior"]
             else:
                 plot_name = ["posterior", "prior"]
         else:
             y_label = _axis_label_for_symbol(
-                symbol="\\pi",
-                distribution=normalise_string("prior"),
-                suffix="^k")
+                symbol="\\pi", distribution=normalise_string("prior"), suffix="^k"
+            )
             if name:
                 plot_name = [name, "prior"]
             else:
                 plot_name = "prior"
     elif posterior_probabilities is not None:
         y_label = _axis_label_for_symbol(
-            symbol="\\pi",
-            distribution=normalise_string("posterior"),
-            suffix="^k")
+            symbol="\\pi", distribution=normalise_string("posterior"), suffix="^k"
+        )
         if name:
             plot_name = [name, "posterior"]
         else:
@@ -1128,22 +1154,24 @@ def analyse_centroid_probabilities(centroids, name=None,
         y_label=y_label,
         palette=centroids_palette,
         uniform=False,
-        name=plot_name
+        name=plot_name,
     )
     figures.save_figure(
         figure=figure,
         name=figure_name,
         options=export_options,
-        directory=analyses_directory
+        directory=analyses_directory,
     )
 
     plot_duration = time() - plot_time_start
-    print("Centroid probabilities plotted and saved ({}).".format(
-        format_duration(plot_duration)))
+    print(
+        "Centroid probabilities plotted and saved ({}).".format(
+            format_duration(plot_duration)
+        )
+    )
 
 
 def analyse_predictions(evaluation_set, analyses_directory=None):
-
     if analyses_directory is None:
         analyses_directory = defaults["analyses"]["directory"]
 
@@ -1154,8 +1182,7 @@ def analyse_predictions(evaluation_set, analyses_directory=None):
     table_name = "predictions"
 
     if evaluation_set.prediction_specifications:
-        table_name += "-" + (
-            evaluation_set.prediction_specifications.name)
+        table_name += "-" + (evaluation_set.prediction_specifications.name)
     else:
         table_name += "-unknown_prediction_method"
 
@@ -1166,10 +1193,14 @@ def analyse_predictions(evaluation_set, analyses_directory=None):
             name="{}-predicted_cluster_ids".format(table_name),
             row_names=evaluation_set.example_names,
             column_names=["Cluster ID"],
-            directory=predictions_directory)
+            directory=predictions_directory,
+        )
         saving_duration = time() - saving_time_start
-        print("    Predicted cluster IDs saved ({}).".format(
-            format_duration(saving_duration)))
+        print(
+            "    Predicted cluster IDs saved ({}).".format(
+                format_duration(saving_duration)
+            )
+        )
 
     if evaluation_set.has_predicted_labels:
         saving_time_start = time()
@@ -1178,10 +1209,12 @@ def analyse_predictions(evaluation_set, analyses_directory=None):
             name="{}-predicted_labels".format(table_name),
             row_names=evaluation_set.example_names,
             column_names=[evaluation_set.terms["class"].capitalize()],
-            directory=predictions_directory)
+            directory=predictions_directory,
+        )
         saving_duration = time() - saving_time_start
-        print("    Predicted labels saved ({}).".format(
-            format_duration(saving_duration)))
+        print(
+            "    Predicted labels saved ({}).".format(format_duration(saving_duration))
+        )
 
     if evaluation_set.has_predicted_superset_labels:
         saving_time_start = time()
@@ -1190,9 +1223,13 @@ def analyse_predictions(evaluation_set, analyses_directory=None):
             name="{}-predicted_superset_labels".format(table_name),
             row_names=evaluation_set.example_names,
             column_names=[evaluation_set.terms["class"].capitalize()],
-            directory=predictions_directory)
+            directory=predictions_directory,
+        )
         saving_duration = time() - saving_time_start
-        print("    Predicted superset labels saved ({}).".format(
-            format_duration(saving_duration)))
+        print(
+            "    Predicted superset labels saved ({}).".format(
+                format_duration(saving_duration)
+            )
+        )
 
     print()

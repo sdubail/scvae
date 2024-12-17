@@ -21,6 +21,9 @@ package_requirements = [
     "tables >= 3.5",
     "tensorflow >= 1.15.2",
     "tensorflow-probability[tf] >= 0.7",
+    "umap-learn",
+    "leidenalg",
+    "python-igraph",
 ]
 
 documentation_requirements = ["pygments >= 2.4", "sphinx >= 2.2"]

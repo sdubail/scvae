@@ -235,6 +235,32 @@ DISTRIBUTIONS = {
             pi=theta["pi"],
         ),
     },
+    "zero-inflated negative binomial small support": {
+        "parameters": {
+            "pi": {
+                "support": [1e-4, 0.9999],
+                "activation function": lambda x: tf.clip_by_value(
+                    tf.sigmoid(x), 1e-4, 0.9999
+                ),
+            },
+            "p": {
+                "support": [1e-4, 0.9999],
+                "activation function": lambda x: tf.clip_by_value(
+                    tf.sigmoid(x), 1e-4, 0.9999
+                ),
+            },
+            "log_r": {
+                "support": [-2, 8],
+                "activation function": lambda x: tf.clip_by_value(x, -2, 8),
+            },
+        },
+        "class": lambda theta: ZeroInflated(
+            dist=tfp.distributions.NegativeBinomial(
+                total_count=tf.exp(theta["log_r"]), probs=theta["p"]
+            ),
+            pi=theta["pi"],
+        ),
+    },
 }
 DISTRIBUTIONS["modified gaussian"] = DISTRIBUTIONS["softplus gaussian"]
 

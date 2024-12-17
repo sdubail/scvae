@@ -21,6 +21,7 @@ import os
 
 import scvae
 from scvae import analyses
+from scvae.analyses.baseline import run_clustering_baseline
 from scvae.analyses.prediction import PredictionSpecifications, predict_labels
 from scvae.data import DataSet
 from scvae.data.utilities import build_directory_path, indices_for_evaluation_subset
@@ -294,6 +295,49 @@ def train(
     # Remove temporary directories created and emptied during training
     if model_caches_directory and os.path.exists(caches_directory):
         remove_empty_directories(caches_directory)
+
+    return 0
+
+
+def baseline(
+    data_set_file_or_name,
+    data_format=None,
+    data_directory=None,
+    map_features=None,
+    feature_selection=None,
+    example_filter=None,
+    noisy_preprocessing_methods=None,
+    preprocessing_methods=None,
+    reconstruction_distribution=None,
+    **keyword_argument,
+):
+    """Evaluate baseline model on data set."""
+
+    print(title("Data"))
+
+    binarise_values = False
+    if reconstruction_distribution == "bernoulli":
+        if noisy_preprocessing_methods:
+            if noisy_preprocessing_methods[-1] != "binarise":
+                noisy_preprocessing_methods.append("binarise")
+        else:
+            binarise_values = True
+
+    data_set = DataSet(
+        data_set_file_or_name,
+        data_format=data_format,
+        directory=data_directory,
+        map_features=map_features,
+        feature_selection=feature_selection,
+        example_filter=example_filter,
+        preprocessing_methods=preprocessing_methods,
+        binarise_values=binarise_values,
+        noisy_preprocessing_methods=noisy_preprocessing_methods,
+    )
+
+    data_set.load()
+
+    _ = run_clustering_baseline(data_directory, data_set)
 
     return 0
 
@@ -846,6 +890,15 @@ def main():
     )
     parser_cross_analyse.set_defaults(func=cross_analyse)
 
+    parser_baseline = subparsers.add_parser(
+        name="baseline",
+        description="Evaluate baseline model on single-cell transcript counts.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser_baseline.set_defaults(func=baseline)
+
+    data_set_subparsers.append(parser_baseline)
+
     for subparser in data_set_subparsers:
         subparser.add_argument(
             dest="data_set_file_or_name", help="data set name or path to data set file"
@@ -1342,5 +1395,6 @@ def main():
     )
 
     arguments = parser.parse_args()
+    print(arguments)
     status = arguments.func(**vars(arguments))
     return status

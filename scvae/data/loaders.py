@@ -532,7 +532,19 @@ def _load_binarised_mnist_data_set(paths):
 @_register_loader("development")
 def _load_development_data_set(**kwargs):
     return _create_development_data_set(
-        n_examples=10000, n_features=25, scale=10, update_probability=0.0001
+        n_examples=10000, n_features=500, scale=10, update_probability=0.001
+    )
+
+
+@_register_loader("disease")
+def _load_disease_data_set(**kwargs):
+    return _create_disease_data_set(
+        n_examples=10000,
+        n_features=500,
+        n_diseases=5,
+        disease_severity_levels=3,
+        healthy_proportion=0.2,
+        scale=10,
     )
 
 
@@ -898,7 +910,7 @@ def _load_labels_from_delimiter_separeted_values(
 
 
 def _create_development_data_set(
-    n_examples=10000, n_features=500, scale=10, update_probability=0.0001
+    n_examples=10000, n_features=5000, scale=10, update_probability=0.0001
 ):
     random_state = numpy.random.RandomState(60)
 
@@ -956,6 +968,455 @@ def _create_development_data_set(
 
     example_names = numpy.array(["example {}".format(i + 1) for i in range(n_examples)])
     feature_ids = numpy.array(["feature {}".format(j + 1) for j in range(n_features)])
+
+    feature_names = ["feature " + n for n in "ABCDE"]
+    feature_id_groups = numpy.split(feature_ids, len(feature_names))
+
+    feature_mapping = {
+        feature_name: feature_id_group.tolist()
+        for feature_name, feature_id_group in zip(feature_names, feature_id_groups)
+    }
+
+    data_dictionary = {
+        "values": values,
+        "labels": labels,
+        "example names": example_names,
+        "feature names": feature_ids,
+        "feature mapping": feature_mapping,
+    }
+
+    return data_dictionary
+
+
+# def _create_disease_data_set(
+#     n_examples=10000,
+#     n_features=500,
+#     n_diseases=5,
+#     disease_severity_levels=3,
+#     healthy_proportion=0.2,
+#     scale=10,
+#     transition_proportion=0.1,
+# ):
+#     random_state = numpy.random.RandomState(60)
+
+#     def create_regulatory_network():
+#         # Create a network where genes regulate each other
+#         n_regulators = int(n_features * 0.1)  # 10% of genes are regulators
+#         regulatory_network = numpy.zeros((n_features, n_features))
+
+#         for regulator in range(n_regulators):
+#             # Each regulator affects multiple genes
+#             n_targets = random_state.poisson(20)
+#             targets = random_state.choice(n_features, size=n_targets, replace=False)
+#             strengths = random_state.normal(0, 1, size=len(targets))
+#             regulatory_network[regulator, targets] = strengths
+
+#         return regulatory_network
+
+#     def apply_regulatory_effects(expression, regulatory_network):
+#         # Apply regulatory effects iteratively
+#         expression = expression.copy()
+#         for _ in range(3):  # Multiple rounds of regulation
+#             regulatory_input = numpy.dot(expression, regulatory_network)
+#             # Clip regulatory input to prevent overflow
+#             regulatory_input = numpy.clip(regulatory_input, -10, 10)  # Limit the range
+#             expression *= numpy.exp(0.1 * regulatory_input)  # Non-linear effect
+#             # Clip expression values to prevent runaway growth
+#             expression = numpy.clip(expression, 0.1, 1e3)
+#         return expression
+
+#     def apply_technical_effects(values):
+#         # Original size factors but with more variation
+#         size_factors = random_state.lognormal(
+#             0, 1.2, size=values.shape[0]
+#         )  # Increased from 0.7 to 1.2
+#         values = values * size_factors[:, numpy.newaxis]
+
+#         # Increased zero inflation (much higher dropout rate)
+#         dropout_rate = random_state.beta(
+#             0.3, 0.1, size=values.shape[1]
+#         )  # This will give rates around 80-90%
+#         zero_mask = random_state.binomial(1, dropout_rate, size=values.shape).astype(
+#             bool
+#         )
+#         values[zero_mask] = 0
+
+#         # More variable PCR bias
+#         pcr_bias = numpy.exp(
+#             random_state.normal(0, 0.5, size=values.shape[1])
+#         )  # Increased from 0.2 to 0.5
+#         values = values * pcr_bias
+
+#         # Add measurement noise (count noise)
+#         noise_factors = random_state.lognormal(0, 0.3, size=values.shape)
+#         values = values * noise_factors
+
+#         # Add background noise (ambient RNA)
+#         background = random_state.exponential(0.1, size=values.shape)
+#         values = values + background
+
+#         return values
+
+#     # Initialize data structures
+#     values = numpy.zeros((n_examples, n_features), numpy.float32)
+#     labels = numpy.zeros(n_examples, numpy.int32)
+
+#     # Create regulatory network
+#     regulatory_network = create_regulatory_network()
+
+#     # Define disease-specific gene programs with more overlap
+#     n_pathways = 8
+#     pathway_sizes = random_state.randint(15, 40, size=n_pathways)
+#     pathways = [
+#         random_state.choice(n_features, size=size, replace=False)
+#         for size in pathway_sizes
+#     ]
+
+#     # Create shared pathways (30% of pathways are shared)
+#     n_shared = int(n_pathways * 0.3)
+#     shared_pathways = random_state.choice(n_pathways, size=n_shared, replace=False)
+
+#     # Create hierarchical disease structure
+#     disease_hierarchy = {}
+#     for disease in range(n_diseases):
+#         n_affected = random_state.randint(2, 4)
+#         # Include shared pathways and create disease variants
+#         disease_specific = random_state.choice(
+#             [i for i in range(n_pathways) if i not in shared_pathways],
+#             size=max(1, n_affected - len(shared_pathways)),
+#             replace=False,
+#         )
+#         base_pathways = numpy.concatenate([disease_specific, shared_pathways])
+
+#         # Create disease variants
+#         disease_hierarchy[disease] = {
+#             "base_pathways": base_pathways,
+#             "variants": [
+#                 {
+#                     "pathways": base_pathways,
+#                     "activation": random_state.beta(2, 2, size=len(base_pathways)),
+#                 }
+#                 for _ in range(2)  # Two variants per disease
+#             ],
+#         }
+
+#     def generate_base_expression():
+#         return 1 + scale * random_state.rand(n_features)
+
+#     def apply_disease_effects(base_expression, disease_id, severity, variant_idx=None):
+#         expression = base_expression.copy()
+#         disease_info = disease_hierarchy[disease_id]
+
+#         if variant_idx is None:
+#             variant_idx = random_state.randint(0, len(disease_info["variants"]))
+#         variant = disease_info["variants"][variant_idx]
+
+#         for idx, (pathway_idx, activation) in enumerate(
+#             zip(disease_info["base_pathways"], variant["activation"])
+#         ):
+#             pathway_genes = pathways[pathway_idx]
+
+#             # Continuous pathway activation
+#             effect = activation * severity
+
+#             # Add non-linear effects
+#             if random_state.rand() < 0.3:  # 30% chance of non-linear response
+#                 effect = effect ** random_state.uniform(0.5, 2.0)
+
+#             # Apply effect with noise
+#             noise = random_state.normal(1, 0.2 * severity, size=len(pathway_genes))
+#             expression[pathway_genes] *= (1 + effect) * noise
+
+#         # Apply regulatory network effects
+#         expression = apply_regulatory_effects(expression, regulatory_network)
+
+#         return numpy.maximum(1, expression)
+
+#     # Generate examples
+#     current_label = 0
+#     n_healthy = int(healthy_proportion * n_examples)
+
+#     # Generate healthy controls
+#     base_expression = generate_base_expression()
+#     for i in range(n_healthy):
+#         r_type = base_expression
+#         p_type = 0.1 + 0.8 * random_state.rand(n_features)
+
+#         for j in range(n_features):
+#             value = random_state.negative_binomial(max(1, r_type[j]), p_type[j])
+#             values[i, j] = value
+#         labels[i] = current_label
+
+#     # Calculate samples for diseases and transitions
+#     n_transition = int(n_examples * transition_proportion)
+#     n_disease_samples = n_examples - n_healthy - n_transition
+#     samples_per_disease = n_disease_samples // n_diseases
+
+#     # Generate disease samples
+#     current_idx = n_healthy
+#     for disease in range(n_diseases):
+#         current_label += 1
+#         base_expression = generate_base_expression()
+
+#         for severity_level in range(disease_severity_levels):
+#             severity = (severity_level + 1) / disease_severity_levels
+#             n_samples = samples_per_disease // disease_severity_levels
+
+#             for i in range(n_samples):
+#                 idx = current_idx + i
+#                 variant_idx = random_state.randint(
+#                     0, len(disease_hierarchy[disease]["variants"])
+#                 )
+#                 r_type = apply_disease_effects(
+#                     base_expression, disease, severity, variant_idx
+#                 )
+#                 p_type = 0.1 + 0.8 * random_state.rand(n_features)
+
+#                 for j in range(n_features):
+#                     value = random_state.negative_binomial(max(1, r_type[j]), p_type[j])
+#                     values[idx, j] = value
+#                 labels[idx] = current_label
+
+#             current_idx += n_samples
+
+#     # Generate transition samples
+#     for i in range(n_transition):
+#         idx = current_idx + i
+#         disease1, disease2 = random_state.choice(n_diseases, size=2, replace=False)
+#         mix_ratio = random_state.beta(2, 2)
+
+#         r_type1 = apply_disease_effects(
+#             base_expression, disease1, random_state.uniform(0.3, 1.0)
+#         )
+#         r_type2 = apply_disease_effects(
+#             base_expression, disease2, random_state.uniform(0.3, 1.0)
+#         )
+#         r_type = mix_ratio * r_type1 + (1 - mix_ratio) * r_type2
+#         p_type = 0.1 + 0.8 * random_state.rand(n_features)
+
+#         for j in range(n_features):
+#             value = random_state.negative_binomial(max(1, r_type[j]), p_type[j])
+#             values[idx, j] = value
+#         labels[idx] = disease1 + 1 if mix_ratio > 0.5 else disease2 + 1
+
+#     # Apply technical effects to all samples
+#     values = apply_technical_effects(values)
+
+#     # Convert labels to strings and shuffle
+#     labels = labels.astype(str)
+#     shuffled_indices = random_state.permutation(n_examples)
+#     values = values[shuffled_indices]
+#     labels = labels[shuffled_indices]
+
+#     # Create data dictionary
+#     example_names = numpy.array([f"example {i+1}" for i in range(n_examples)])
+#     feature_ids = numpy.array([f"feature {j+1}" for j in range(n_features)])
+
+#     feature_names = ["feature " + n for n in "ABCDE"]
+#     feature_id_groups = numpy.split(feature_ids, len(feature_names))
+
+#     feature_mapping = {
+#         feature_name: feature_id_group.tolist()
+#         for feature_name, feature_id_group in zip(feature_names, feature_id_groups)
+#     }
+
+#     data_dictionary = {
+#         "values": values,
+#         "labels": labels,
+#         "example names": example_names,
+#         "feature names": feature_ids,
+#         "feature mapping": feature_mapping,
+#     }
+
+#     return data_dictionary
+
+
+def _create_disease_data_set(
+    n_examples=10000,
+    n_features=500,
+    n_diseases=5,
+    disease_severity_levels=3,
+    healthy_proportion=0.2,
+    scale=10,
+    transition_proportion=0.1,  # Proportion of samples that are disease transitions
+):
+    random_state = numpy.random.RandomState(60)
+
+    values = numpy.zeros((n_examples, n_features), numpy.float32)
+    labels = numpy.zeros(n_examples, numpy.int32)
+
+    # Define disease-specific gene programs with more overlap
+    n_pathways = 8
+    pathway_sizes = random_state.randint(15, 40, size=n_pathways)
+    pathways = [
+        random_state.choice(n_features, size=size, replace=False)
+        for size in pathway_sizes
+    ]
+
+    # Create shared pathways (30% of pathways are shared)
+    n_shared = int(n_pathways * 0.3)
+    shared_pathways = random_state.choice(n_pathways, size=n_shared, replace=False)
+
+    # Assign pathways to diseases with more overlap
+    disease_pathways = {}
+    for disease in range(n_diseases):
+        n_affected = random_state.randint(2, 4)
+        # Include some shared pathways
+        disease_specific = random_state.choice(
+            [i for i in range(n_pathways) if i not in shared_pathways],
+            size=max(1, n_affected - len(shared_pathways)),
+            replace=False,
+        )
+        disease_pathways[disease] = numpy.concatenate(
+            [disease_specific, shared_pathways]
+        )
+
+    def generate_base_expression():
+        return 1 + scale * random_state.rand(n_features)
+
+    def apply_disease_effects(base_expression, disease_id, severity, subtype=0):
+        expression = base_expression.copy()
+
+        # Modify pathway effects based on subtype
+        if subtype == 0:
+            effect_strength = 1.0
+            current_pathways = disease_pathways[disease_id]
+        else:
+            effect_strength = 0.7
+            # Mix pathways from different diseases for subtype
+            other_disease = (disease_id + 1) % n_diseases
+            current_pathways = numpy.concatenate(
+                [
+                    disease_pathways[disease_id][
+                        : len(disease_pathways[disease_id]) // 2
+                    ],
+                    disease_pathways[other_disease][
+                        len(disease_pathways[other_disease]) // 2 :
+                    ],
+                ]
+            )
+
+        for pathway_idx in current_pathways:
+            pathway_genes = pathways[pathway_idx]
+            effect_type = random_state.choice(["up", "down", "noisy"])
+
+            if effect_type == "up":
+                expression[pathway_genes] *= (
+                    1 + severity * effect_strength * random_state.uniform(0.5, 2.0)
+                )
+            elif effect_type == "down":
+                expression[pathway_genes] *= numpy.maximum(
+                    1, (1 - severity * effect_strength * random_state.uniform(0.3, 0.8))
+                )
+            else:
+                noise = numpy.maximum(
+                    0.1,
+                    random_state.normal(
+                        1, severity * effect_strength * 0.5, size=len(pathway_genes)
+                    ),
+                )
+                expression[pathway_genes] *= noise
+
+        return numpy.maximum(1, expression)
+
+    # Generate batch effects
+    n_batches = 3
+    batch_effects = random_state.normal(0, 0.5, size=(n_batches, n_features))
+
+    # Generate examples
+    current_label = 0
+    n_healthy = int(healthy_proportion * n_examples)
+
+    # First generate healthy controls
+    base_expression = generate_base_expression()
+    for i in range(n_healthy):
+        r_type = base_expression
+        p_type = 0.1 + 0.8 * random_state.rand(n_features)
+        dropout_type = random_state.rand(n_features)
+        batch = random_state.randint(0, n_batches)
+
+        for j in range(n_features):
+            value = random_state.negative_binomial(max(1, r_type[j]), p_type[j])
+            value_dropout = random_state.binomial(1, dropout_type[j])
+            # Apply batch effect
+            value = value_dropout * value * numpy.exp(batch_effects[batch, j])
+            values[i, j] = value
+        labels[i] = current_label
+
+    # Calculate number of transition samples
+    n_transition = int(n_examples * transition_proportion)
+    n_disease_samples = n_examples - n_healthy - n_transition
+    samples_per_disease = n_disease_samples // n_diseases
+
+    # Generate disease samples
+    current_idx = n_healthy
+    for disease in range(n_diseases):
+        current_label += 1
+        base_expression = generate_base_expression()
+
+        for severity_level in range(disease_severity_levels):
+            severity = (severity_level + 1) / disease_severity_levels
+            n_samples = samples_per_disease // disease_severity_levels
+
+            for i in range(n_samples):
+                idx = current_idx + i
+                # Randomly assign subtype
+                subtype = random_state.choice([0, 1], p=[0.7, 0.3])
+                r_type = apply_disease_effects(
+                    base_expression, disease, severity, subtype
+                )
+                p_type = 0.1 + 0.8 * random_state.rand(n_features)
+                dropout_type = random_state.rand(n_features)
+                batch = random_state.randint(0, n_batches)
+
+                for j in range(n_features):
+                    value = random_state.negative_binomial(max(1, r_type[j]), p_type[j])
+                    value_dropout = random_state.binomial(1, dropout_type[j])
+                    # Apply batch effect
+                    value = value_dropout * value * numpy.exp(batch_effects[batch, j])
+                    values[idx, j] = value
+                labels[idx] = current_label
+
+            current_idx += n_samples
+
+    # Generate transition samples
+    for i in range(n_transition):
+        idx = current_idx + i
+        # Pick two random diseases
+        disease1, disease2 = random_state.choice(n_diseases, size=2, replace=False)
+        mix_ratio = random_state.beta(2, 2)  # Random mixing between diseases
+
+        # Mix the disease effects
+        r_type1 = apply_disease_effects(
+            base_expression, disease1, random_state.uniform(0.3, 1.0)
+        )
+        r_type2 = apply_disease_effects(
+            base_expression, disease2, random_state.uniform(0.3, 1.0)
+        )
+        r_type = mix_ratio * r_type1 + (1 - mix_ratio) * r_type2
+
+        p_type = 0.1 + 0.8 * random_state.rand(n_features)
+        dropout_type = random_state.rand(n_features)
+        batch = random_state.randint(0, n_batches)
+
+        for j in range(n_features):
+            value = random_state.negative_binomial(max(1, r_type[j]), p_type[j])
+            value_dropout = random_state.binomial(1, dropout_type[j])
+            # Apply batch effect
+            value = value_dropout * value * numpy.exp(batch_effects[batch, j])
+            values[idx, j] = value
+        # Label as the dominant disease
+        labels[idx] = disease1 + 1 if mix_ratio > 0.5 else disease2 + 1
+
+    # Convert labels to strings and shuffle
+    labels = labels.astype(str)
+    shuffled_indices = random_state.permutation(n_examples)
+    values = values[shuffled_indices]
+    labels = labels[shuffled_indices]
+
+    # Create data dictionary
+    example_names = numpy.array([f"example {i+1}" for i in range(n_examples)])
+    feature_ids = numpy.array([f"feature {j+1}" for j in range(n_features)])
 
     feature_names = ["feature " + n for n in "ABCDE"]
     feature_id_groups = numpy.split(feature_ids, len(feature_names))

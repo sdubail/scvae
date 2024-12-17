@@ -18,6 +18,7 @@
 
 import numpy
 import scipy
+import umap
 from sklearn.decomposition import PCA, FastICA, TruncatedSVD
 from sklearn.manifold import TSNE
 
@@ -29,25 +30,31 @@ DECOMPOSITION_METHOD_NAMES = {
     "PCA": ["pca"],
     "SVD": ["svd"],
     "ICA": ["ica"],
-    "t-SNE": ["t_sne", "tsne"]
+    "t-SNE": ["t_sne", "tsne"],
+    "UMAP": ["umap"],  # Add this line
 }
 DECOMPOSITION_METHOD_LABEL = {
     "PCA": "PC",
     "SVD": "SVD",
     "ICA": "IC",
-    "t-SNE": "tSNE"
+    "t-SNE": "tSNE",
+    "UMAP": "UMAP",  # Add this line
 }
 
 MAXIMUM_FEATURE_SIZE_FOR_NORMAL_PCA = 2000
 
 
-def decompose(values, other_value_sets={}, centroids={}, method=None,
-              number_of_components=None, random=False):
-
+def decompose(
+    values,
+    other_value_sets={},
+    centroids={},
+    method=None,
+    number_of_components=None,
+    random=False,
+):
     if method is None:
         method = defaults["decomposition_method"]
-    method = proper_string(
-        normalise_string(method), DECOMPOSITION_METHOD_NAMES)
+    method = proper_string(normalise_string(method), DECOMPOSITION_METHOD_NAMES)
 
     if number_of_components is None:
         number_of_components = defaults["decomposition_dimensionality"]
@@ -63,14 +70,12 @@ def decompose(values, other_value_sets={}, centroids={}, method=None,
         random_state = 42
 
     if method == "PCA":
-        if (values.shape[1] <= MAXIMUM_FEATURE_SIZE_FOR_NORMAL_PCA
-                and not scipy.sparse.issparse(values)):
+        if values.shape[
+            1
+        ] <= MAXIMUM_FEATURE_SIZE_FOR_NORMAL_PCA and not scipy.sparse.issparse(values):
             model = PCA(n_components=number_of_components)
         else:
-            model = IncrementalPCA(
-                n_components=number_of_components,
-                batch_size=100
-            )
+            model = IncrementalPCA(n_components=number_of_components, batch_size=100)
     elif method == "SVD":
         model = TruncatedSVD(n_components=number_of_components)
     elif method == "ICA":
@@ -83,7 +88,15 @@ def decompose(values, other_value_sets={}, centroids={}, method=None,
         model = TSNE(
             n_components=number_of_components,
             method=tsne_method,
-            random_state=random_state
+            random_state=random_state,
+        )
+    elif method == "UMAP":
+        model = umap.UMAP(
+            n_components=number_of_components,
+            random_state=random_state if not random else None,
+            n_neighbors=30,  # Increased for high-dimensional data
+            min_dist=0.05,  # Decreased for tighter clustering
+            metric="euclidean",
         )
     else:
         raise ValueError("Method `{}` not found.".format(method))
@@ -97,8 +110,7 @@ def decompose(values, other_value_sets={}, centroids={}, method=None,
                 other_value_decomposed = model.transform(other_values)
             else:
                 other_value_decomposed = None
-            other_value_sets_decomposed[other_set_name] = (
-                other_value_decomposed)
+            other_value_sets_decomposed[other_set_name] = other_value_decomposed
     else:
         other_value_sets_decomposed = None
 
@@ -114,41 +126,42 @@ def decompose(values, other_value_sets={}, centroids={}, method=None,
         for distribution, distribution_centroids in centroids.items():
             if distribution_centroids:
                 centroids_distribution_decomposed = {}
-                for parameter, parameter_values in (
-                        distribution_centroids.items()):
+                for parameter, parameter_values in distribution_centroids.items():
                     if parameter == "means":
                         shape = numpy.array(parameter_values.shape)
                         original_dimension = shape[-1]
                         reshaped_parameter_values = parameter_values.reshape(
-                            -1, original_dimension)
+                            -1, original_dimension
+                        )
                         decomposed_parameter_values = model.transform(
-                            reshaped_parameter_values)
+                            reshaped_parameter_values
+                        )
                         shape[-1] = number_of_components
-                        new_parameter_values = (
-                            decomposed_parameter_values.reshape(shape))
+                        new_parameter_values = decomposed_parameter_values.reshape(
+                            shape
+                        )
                     elif parameter == "covariance_matrices":
                         shape = numpy.array(parameter_values.shape)
                         original_dimension = shape[-1]
                         reshaped_parameter_values = parameter_values.reshape(
-                            -1, original_dimension, original_dimension)
+                            -1, original_dimension, original_dimension
+                        )
                         n_centroids = reshaped_parameter_values.shape[0]
                         decomposed_parameter_values = numpy.empty(
-                            shape=(n_centroids, 2, 2))
+                            shape=(n_centroids, 2, 2)
+                        )
                         for i in range(n_centroids):
                             decomposed_parameter_values[i] = (
-                                components
-                                @ reshaped_parameter_values[i]
-                                @ components.T
+                                components @ reshaped_parameter_values[i] @ components.T
                             )
                         shape[-2:] = number_of_components
-                        new_parameter_values = (
-                            decomposed_parameter_values.reshape(shape))
+                        new_parameter_values = decomposed_parameter_values.reshape(
+                            shape
+                        )
                     else:
                         new_parameter_values = parameter_values
-                    centroids_distribution_decomposed[parameter] = (
-                        new_parameter_values)
-                centroids_decomposed[distribution] = (
-                    centroids_distribution_decomposed)
+                    centroids_distribution_decomposed[parameter] = new_parameter_values
+                centroids_decomposed[distribution] = centroids_distribution_decomposed
             else:
                 centroids_decomposed[distribution] = None
         if "unknown" in centroids_decomposed:
